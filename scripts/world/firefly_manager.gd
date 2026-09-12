@@ -26,10 +26,11 @@ func _process(delta: float) -> void:
 			spawn_one()
 		elif _flies.size() > target + 3:
 			# лишние тихо улетают (исчезают за границей)
-			var f = _flies.pop_back()
-			var tw := f.create_tween()
-			tw.tween_property(f, "modulate:a", 0.0, 2.0)
-			tw.tween_callback(f.queue_free)
+			var f: Node2D = _flies.pop_back()
+			if is_instance_valid(f):
+				var tw: Tween = f.create_tween()
+				tw.tween_property(f, "modulate:a", 0.0, 2.0)
+				tw.tween_callback(f.queue_free)
 	# скрытные — видны только в тумане
 	_fog = move_toward(_fog, 1.0 if weather == "fog" else 0.0, delta * 0.3)
 	var over := GameState.jar_is_over()

@@ -151,7 +151,8 @@ func _draw() -> void:
 	# шлейф
 	for i in range(_trail.size()):
 		var f := float(i) / maxf(_trail.size(), 1)
-		var p := to_local(_trail[i])
+		var tp: Vector2 = _trail[i]
+		var p := to_local(tp)
 		draw_circle(p, glow_size * 0.5 * f, Color(color.r, color.g, color.b, 0.25 * f * a))
 	# ореол
 	draw_circle(Vector2.ZERO, glow_size * 4.0 * pulse + 2, Color(color.r, color.g, color.b, 0.10 * a))

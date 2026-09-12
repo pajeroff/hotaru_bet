@@ -9,7 +9,7 @@ const ACTIONS := ["move_up", "move_down", "move_left", "move_right", "interact",
 const RESOLUTIONS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
 const TIME_SPEEDS := {"slow": 0.5, "normal": 1.0, "fast": 2.0}
 
-var fullscreen := false
+var fullscreen := true
 var resolution_index := 0
 var vsync := true
 var particle_quality := 1 # 0 low, 1 medium, 2 high
@@ -33,6 +33,8 @@ func _ready() -> void:
 	_load()
 	_install_translations()
 	apply_all()
+	# окно может ещё не быть готово к смене режима на самом первом кадре
+	call_deferred("apply_graphics")
 
 func _load() -> void:
 	var cfg := ConfigFile.new()
@@ -78,18 +80,20 @@ func apply_all() -> void:
 	settings_changed.emit()
 
 func apply_graphics() -> void:
-	var win := get_window()
+	var mode := DisplayServer.window_get_mode()
+	var is_full := mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
 	if fullscreen:
-		win.mode = Window.MODE_FULLSCREEN
+		if not is_full:
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
-		var was_fullscreen := win.mode == Window.MODE_FULLSCREEN or win.mode == Window.MODE_EXCLUSIVE_FULLSCREEN
-		if was_fullscreen:
-			win.mode = Window.MODE_WINDOWED
+		if is_full:
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 		var res: Vector2i = RESOLUTIONS[clampi(resolution_index, 0, RESOLUTIONS.size() - 1)]
-		if win.size != res:
-			win.size = res
-			var screen_size := DisplayServer.screen_get_size()
-			win.position = Vector2i((screen_size - res) / 2.0)
+		if DisplayServer.window_get_size() != res:
+			DisplayServer.window_set_size(res)
+			var screen_size: Vector2i = DisplayServer.screen_get_size()
+			var origin: Vector2i = DisplayServer.screen_get_position()
+			DisplayServer.window_set_position(origin + Vector2i((screen_size - res) / 2.0))
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
 
 func apply_audio() -> void:
