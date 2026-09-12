@@ -157,11 +157,12 @@ func _populate() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	# деревья кольцом по краю (плотный лес)
-	for ring in [1.0, 1.12, 1.25]:
+	var rings: Array[float] = [1.0, 1.12, 1.25]
+	for ring in rings:
 		var n := int(48 * ring)
 		for i in range(n):
 			var ang := TAU * i / n + rng.randf_range(-0.05, 0.05)
-			var r := rng.randf_range(0.9, 1.02) * ring
+			var r: float = rng.randf_range(0.9, 1.02) * ring
 			var p := Vector2(cos(ang) * HALF.x * r, sin(ang) * HALF.y * r)
 			var kind := "tree_a" if rng.randf() < 0.55 else ("tree_b" if rng.randf() < 0.75 else "tree_sakura")
 			_add_prop(kind, p, rng.randf_range(0.85, 1.15), true, 1.0)
@@ -193,7 +194,8 @@ func _populate() -> void:
 		spr.modulate = Color(1, 1, 1).lerp(Color(0.85, 0.95, 0.8), rng.randf())
 		_grass.append([spr, spr.material, p])
 	# фонари вдоль тропинки к храму
-	for y in [180, 320, 460]:
+	var lantern_rows: Array[int] = [180, 320, 460]
+	for y in lantern_rows:
 		_add_prop("lantern", Vector2(-48, y), 0.7, false, 0.6)
 		_add_prop("lantern", Vector2(48, y), 0.7, false, 0.6)
 
@@ -229,8 +231,8 @@ func _build_collision() -> void:
 		var s := c as Sprite2D
 		var tex_name := ""
 		for k in SPR:
-			if SPR[k] == s.texture: tex_name = k
-		var r := 0.0
+			if SPR[k] == s.texture: tex_name = str(k)
+		var r: float = 0.0
 		match tex_name:
 			"tree_a", "tree_b", "tree_sakura": r = 18.0 * s.scale.x
 			"bush", "bush_flower": r = 26.0 * s.scale.x
@@ -252,7 +254,7 @@ func _process(delta: float) -> void:
 		var spr: Sprite2D = g[0]
 		var m: ShaderMaterial = g[1]
 		var p: Vector2 = g[2]
-		var d := p.distance_to(player_pos)
+		var d: float = p.distance_to(player_pos)
 		var push := 0.0
 		if d < 46.0:
 			push = signf(p.x - player_pos.x) * (1.0 - d / 46.0)

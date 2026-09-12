@@ -13,6 +13,7 @@ const TEX_SHADOW := preload("res://assets/textures/shadow_blob.png")
 const TEX_GLOW := preload("res://assets/textures/particle_glow.png")
 const FW := 96
 const FH := 128
+const DIR_NAMES: Array[String] = ["down", "left", "right", "up"]
 
 var facing := Vector2.DOWN
 var _row := 0 # 0 down, 1 left, 2 right, 3 up
@@ -101,10 +102,10 @@ func _ready() -> void:
 func _build_frames() -> SpriteFrames:
 	var sf := SpriteFrames.new()
 	sf.remove_animation("default")
-	var names := ["down", "left", "right", "up"]
 	for r in range(4):
-		var walk := "walk_" + names[r]
-		var idle := "idle_" + names[r]
+		var dir_name: String = DIR_NAMES[r]
+		var walk: String = "walk_" + dir_name
+		var idle: String = "idle_" + dir_name
 		sf.add_animation(walk)
 		sf.set_animation_speed(walk, 8.0)
 		sf.set_animation_loop(walk, true)
@@ -141,8 +142,8 @@ func _physics_process(delta: float) -> void:
 			_row = 1 if facing.x < 0 else 2
 		else:
 			_row = 3 if facing.y < 0 else 0
-	var names := ["down", "left", "right", "up"]
-	var anim := ("walk_" if _walking else "idle_") + names[_row]
+	var dir_name: String = DIR_NAMES[_row]
+	var anim: String = ("walk_" if _walking else "idle_") + dir_name
 	if _sprite.animation != anim:
 		_sprite.play(anim)
 	_sprite.speed_scale = clampf(velocity.length() / SPEED, 0.6, 1.2) if _walking else 1.0

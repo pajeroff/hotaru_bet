@@ -38,8 +38,9 @@ func _ready() -> void:
 	_rain = _make_weather_particles(TEX_RAIN, 600, Vector3(-60, 900, 0), 0.9, 0.5, 1.0, Color(0.85, 0.92, 1.0, 0.55))
 	_snow = _make_weather_particles(TEX_GLOW, 260, Vector3(6, 40, 0), 9.0, 0.08, 0.2, Color(1, 1, 1, 0.85))
 	_petals = _make_weather_particles(TEX_PETAL, 160, Vector3(30, 60, 0), 8.0, 0.7, 1.2, Color(1, 0.85, 0.9, 0.9))
-	for p in [_rain, _snow, _petals]:
-		add_child(p)
+	add_child(_rain)
+	add_child(_snow)
+	add_child(_petals)
 	# туман
 	_fog_rect = ColorRect.new()
 	_fog_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -105,11 +106,13 @@ func _make_weather_particles(tex: Texture2D, amount: int, vel: Vector3, life: fl
 
 func _apply_quality() -> void:
 	var q := clampi(Settings.particle_quality, 0, 2)
-	var mul: float = [0.35, 0.7, 1.0][q]
+	var muls: Array[float] = [0.35, 0.7, 1.0]
+	var blooms: Array[float] = [0.3, 0.5, 0.65]
+	var mul: float = muls[q]
 	_rain.amount_ratio = mul
 	_snow.amount_ratio = mul
 	_petals.amount_ratio = mul
-	_post_mat.set_shader_parameter("bloom_strength", [0.3, 0.5, 0.65][q])
+	_post_mat.set_shader_parameter("bloom_strength", blooms[q])
 	_post_mat.set_shader_parameter("brightness", Settings.brightness)
 
 func attach_modulate(m: CanvasModulate) -> void:

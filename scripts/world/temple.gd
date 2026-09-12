@@ -98,8 +98,11 @@ func _ready() -> void:
 	_glow = _target_glow
 
 func _update_target() -> void:
-	_target_glow = [0.35, 0.7, 1.1, 1.4, 1.7][clampi(GameState.temple_level, 0, 4)]
-	_embers.amount = [12, 24, 40, 56, 72][clampi(GameState.temple_level, 0, 4)]
+	var lvl := clampi(GameState.temple_level, 0, 4)
+	var glows: Array[float] = [0.35, 0.7, 1.1, 1.4, 1.7]
+	var amounts: Array[int] = [12, 24, 40, 56, 72]
+	_target_glow = glows[lvl]
+	_embers.amount = amounts[lvl]
 
 func _pulse_burst() -> void:
 	var tw := create_tween()
@@ -113,7 +116,6 @@ func _process(delta: float) -> void:
 	_light.energy = _glow * beat * 1.3
 	_light.texture_scale = 2.6 + _glow * 0.8
 	_mat.set_shader_parameter("glow", _glow * beat)
-	var i := 0
-	for l in _lantern_lights:
+	for i in range(_lantern_lights.size()):
+		var l: PointLight2D = _lantern_lights[i]
 		l.energy = 0.45 + 0.25 * sin(_t * 3.0 + i * 1.7)
-		i += 1
