@@ -1,6 +1,8 @@
 extends CanvasLayer
 ## Панель банки: содержимое, описание светлячка, отпускание.
 
+const GameStateScript := preload("res://scripts/autoload/game_state.gd")
+
 signal closed
 
 var _list: VBoxContainer
@@ -93,7 +95,7 @@ func _refresh() -> void:
 		b.button_pressed = (i == _selected)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		var col := FireflyData.color_of(f)
-		b.text = "●  %s  (%d)" % [tr(str(f["name"])), GameState.slot_cost(str(f["rarity"]))]
+		b.text = "●  %s  (%d)" % [tr(str(f["name"])), GameStateScript.slot_cost(str(f["rarity"]))]
 		b.add_theme_color_override("font_color", col.darkened(0.35))
 		b.add_theme_color_override("font_hover_color", col.darkened(0.35))
 		b.add_theme_color_override("font_pressed_color", col.darkened(0.35))

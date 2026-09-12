@@ -33,7 +33,6 @@ var _leaves: Array = []
 
 func _ready() -> void:
 	layer = 5
-	var vp_size := Vector2(1280, 720)
 	# слой частиц погоды (в экранных координатах)
 	_rain = _make_weather_particles(TEX_RAIN, 600, Vector3(-60, 900, 0), 0.9, 0.5, 1.0, Color(0.85, 0.92, 1.0, 0.55))
 	_snow = _make_weather_particles(TEX_GLOW, 260, Vector3(6, 40, 0), 9.0, 0.08, 0.2, Color(1, 1, 1, 0.85))

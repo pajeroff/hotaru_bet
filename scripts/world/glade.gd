@@ -80,7 +80,7 @@ func _make_path_mask() -> ImageTexture:
 			if _on_path(p):
 				img.set_pixel(x, y, Color.WHITE)
 	# мягкие края
-	img.resize(s / 2, s / 2, Image.INTERPOLATE_BILINEAR)
+	img.resize(int(s / 2.0), int(s / 2.0), Image.INTERPOLATE_BILINEAR)
 	img.resize(s, s, Image.INTERPOLATE_CUBIC)
 	return ImageTexture.create_from_image(img)
 
@@ -147,6 +147,7 @@ func _add_prop(kind: String, pos: Vector2, scale_mul := 1.0, sway := true, shado
 		var m := ShaderMaterial.new()
 		m.shader = SH_WIND
 		m.set_shader_parameter("phase", randf() * TAU)
+		m.set_shader_parameter("player_push", 0.0)
 		m.set_shader_parameter("strength", 0.02 if kind.begins_with("tree") else 0.035)
 		spr.material = m
 		_swaying.append([spr, m])
@@ -258,6 +259,7 @@ func _process(delta: float) -> void:
 		var push := 0.0
 		if d < 46.0:
 			push = signf(p.x - player_pos.x) * (1.0 - d / 46.0)
-		var cur: float = m.get_shader_parameter("player_push")
+		var cur_v = m.get_shader_parameter("player_push")
+		var cur: float = float(cur_v) if cur_v != null else 0.0
 		m.set_shader_parameter("player_push", lerpf(cur, push, delta * 8.0))
 		spr.visible = d < 1400.0
