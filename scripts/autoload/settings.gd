@@ -89,7 +89,7 @@ func apply_graphics() -> void:
 		if win.size != res:
 			win.size = res
 			var screen_size := DisplayServer.screen_get_size()
-			win.position = (screen_size - res) / 2
+			win.position = Vector2i((screen_size - res) / 2.0)
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
 
 func apply_audio() -> void:
