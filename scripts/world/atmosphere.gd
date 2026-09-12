@@ -34,7 +34,7 @@ var _leaves: Array = []
 func _ready() -> void:
 	layer = 5
 	# слой частиц погоды (в экранных координатах)
-	_rain = _make_weather_particles(TEX_RAIN, 600, Vector3(-60, 900, 0), 0.9, 0.5, 1.0, Color(0.85, 0.92, 1.0, 0.55))
+	_rain = _make_weather_particles(TEX_RAIN, 400, Vector3(-60, 900, 0), 0.9, 0.5, 1.0, Color(0.85, 0.92, 1.0, 0.55))
 	_snow = _make_weather_particles(TEX_GLOW, 260, Vector3(6, 40, 0), 9.0, 0.08, 0.2, Color(1, 1, 1, 0.85))
 	_petals = _make_weather_particles(TEX_PETAL, 160, Vector3(30, 60, 0), 8.0, 0.7, 1.2, Color(1, 0.85, 0.9, 0.9))
 	add_child(_rain)
@@ -63,7 +63,7 @@ func _ready() -> void:
 	_post_rect.material = _post_mat
 	add_child(_post_rect)
 
-	for i in range(140):
+	for i in range(90):
 		_stars.append(Vector3(randf(), randf() * 0.65, randf()))
 	GameState.weather_changed.connect(_on_weather)
 	GameState.phase_changed.connect(_on_phase)
@@ -105,7 +105,9 @@ func _make_weather_particles(tex: Texture2D, amount: int, vel: Vector3, life: fl
 
 func _apply_quality() -> void:
 	var q := clampi(Settings.particle_quality, 0, 2)
-	var muls: Array[float] = [0.35, 0.7, 1.0]
+	_post_rect.visible = q >= 1
+	_fog_rect.visible = q >= 1
+	var muls: Array[float] = [0.25, 0.55, 1.0]
 	var blooms: Array[float] = [0.15, 0.25, 0.32]
 	var mul: float = muls[q]
 	_rain.amount_ratio = mul
@@ -183,7 +185,10 @@ func _process(delta: float) -> void:
 	_cur_light = _cur_light.lerp(tinted, delta * 0.4)
 	if _modulate != null:
 		_modulate.color = _cur_light
-	_fog_mat.set_shader_parameter("density", _fog_a)
+	if _fog_rect.visible:
+		_fog_mat.set_shader_parameter("density", _fog_a)
+	elif _fog_a > 0.01:
+		pass
 	# пост-обработка подстраивается под фазу
 	var tint := Color(1.0, 0.98, 0.94) if phase != "night" else Color(0.92, 0.95, 1.05)
 	_post_mat.set_shader_parameter("tint", tint)
@@ -227,6 +232,8 @@ func _draw_overlay() -> void:
 			var r := 1.0 + s.z * 1.2 + tw * 0.5
 			_overlay.draw_circle(Vector2(s.x, s.y) * sz, r * 2.5, Color(1, 1, 0.95, 0.06 * _star_a * tw))
 			_overlay.draw_circle(Vector2(s.x, s.y) * sz, r, Color(1, 1, 0.95, 0.5 * _star_a * (0.4 + 0.6 * tw)))
+	if not _fog_rect.visible and _fog_a > 0.01:
+		_overlay.draw_rect(Rect2(Vector2.ZERO, sz), Color(0.88, 0.9, 0.96, 0.45 * _fog_a))
 	if _dark_a > 0.001:
 		_overlay.draw_rect(Rect2(Vector2.ZERO, sz), Color(0.15, 0.2, 0.3, _dark_a * 0.45))
 	if _silence_a > 0.01:

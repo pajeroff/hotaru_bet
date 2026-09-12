@@ -15,7 +15,7 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	if fireflies == null:
+	if fireflies == null or Settings.particle_quality < 1:
 		return
 	for f in fireflies.get_children():
 		if not f is Node2D or not f.has_method("try_catch"):

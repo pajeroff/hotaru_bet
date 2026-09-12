@@ -22,8 +22,12 @@ const SH_WATER := preload("res://shaders/water.gdshader")
 var player_pos := Vector2.ZERO
 var wind := 0.0
 var _t := 0.0
-var _swaying: Array = [] # [Sprite2D, ShaderMaterial]
-var _grass: Array = []   # [Sprite2D, ShaderMaterial, base_pos]
+var _grass: Array = []   # Sprite2D пучков травы
+var _wind_mat_tree: ShaderMaterial
+var _wind_mat_small: ShaderMaterial
+var _quality := 1
+var _visible_props: Array = []
+var _cull_timer := 0.0
 var props_root: Node2D   # Y-sorted контейнер (сюда же кладём игрока)
 var _tall: Array = []    # высокие спрайты, которые становятся полупрозрачными над игроком
 var _butterflies: Array = []
@@ -31,6 +35,13 @@ var _birds: Array = []
 var _anim_root: Node2D
 
 func _ready() -> void:
+	_quality = clampi(Settings.particle_quality, 0, 2)
+	_wind_mat_tree = ShaderMaterial.new()
+	_wind_mat_tree.shader = SH_WIND
+	_wind_mat_tree.set_shader_parameter("strength", 0.02)
+	_wind_mat_small = ShaderMaterial.new()
+	_wind_mat_small.shader = SH_WIND
+	_wind_mat_small.set_shader_parameter("strength", 0.035)
 	for n in SPRITE_NAMES:
 		var tex := load("res://assets/sprites/%s.png" % n) as Texture2D
 		if tex == null:
@@ -144,7 +155,7 @@ func _add_prop(kind: String, pos: Vector2, scale_mul := 1.0, sway := true, shado
 	var h := spr.texture.get_height()
 	spr.offset = Vector2(0, -h * 0.5 + 6) # "ноги" в точке pos
 	spr.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	if shadow > 0.0:
+	if shadow > 0.0 and (_quality > 0 or TALL_KINDS.has(kind)):
 		var sh := Sprite2D.new()
 		sh.texture = TEX_SHADOW
 		sh.position = pos + Vector2(6, 4)
@@ -154,7 +165,7 @@ func _add_prop(kind: String, pos: Vector2, scale_mul := 1.0, sway := true, shado
 		sh.z_index = 1
 		add_child(sh)
 	# окклюдер для теней от фонаря/храма
-	if kind.begins_with("tree") or kind == "rock" or kind.begins_with("bush"):
+	if _quality >= 2 and (kind.begins_with("tree") or kind == "rock"):
 		var occ := LightOccluder2D.new()
 		var poly := OccluderPolygon2D.new()
 		var pts := PackedVector2Array()
@@ -166,14 +177,9 @@ func _add_prop(kind: String, pos: Vector2, scale_mul := 1.0, sway := true, shado
 		occ.occluder = poly
 		occ.sdf_collision = false
 		add_child(occ)
-	if sway and SWAY_KINDS.has(kind):
-		var m := ShaderMaterial.new()
-		m.shader = SH_WIND
-		m.set_shader_parameter("phase", randf() * TAU)
-		m.set_shader_parameter("player_push", 0.0)
-		m.set_shader_parameter("strength", 0.02 if kind.begins_with("tree") else 0.035)
-		spr.material = m
-		_swaying.append([spr, m])
+	if sway and SWAY_KINDS.has(kind) and _quality > 0:
+		# общий материал на все объекты одного типа (фаза берётся из позиции в шейдере)
+		spr.material = _wind_mat_tree if kind.begins_with("tree") else _wind_mat_small
 	if TALL_KINDS.has(kind):
 		_tall.append(spr)
 	props_root.add_child(spr)
@@ -230,21 +236,22 @@ func _populate() -> void:
 		if p.length() < 260 or _in_pond(p, 1.3) or _on_path(p): continue
 		_add_prop("bush_flower" if rng.randf() < 0.4 else "bush", p, rng.randf_range(0.7, 1.15), true, 0.8)
 	# камни, пни, брёвна, грибы, цветы
-	var scatter := {"rock": 50, "stump": 22, "log": 14, "mushrooms": 40, "flowers": 90}
+	var flower_counts: Array[int] = [30, 60, 90]
+	var scatter := {"rock": 50, "stump": 22, "log": 14, "mushrooms": 40, "flowers": flower_counts[_quality]}
 	for kind in scatter:
-		for i in range(scatter[kind]):
+		var cnt: int = scatter[kind]
+		for i in range(cnt):
 			var p := Vector2(rng.randf_range(-HALF.x * 0.88, HALF.x * 0.88), rng.randf_range(-HALF.y * 0.88, HALF.y * 0.88))
 			if p.length() < 230 or _in_pond(p, 1.2) or _on_path(p): continue
 			_add_prop(str(kind), p, rng.randf_range(0.55, 1.0), true, 0.6 if kind != "flowers" else 0.0)
 	# пучки травы
-	for i in range(700):
+	var grass_counts: Array[int] = [180, 400, 700]
+	for i in range(grass_counts[_quality]):
 		var p := Vector2(rng.randf_range(-HALF.x * 0.92, HALF.x * 0.92), rng.randf_range(-HALF.y * 0.92, HALF.y * 0.92))
 		if p.length() < 220 or _in_pond(p, 1.15) or _on_path(p): continue
 		var spr := _add_prop("grass_tuft", p, rng.randf_range(0.45, 0.9), true, 0.0)
-		if spr.material == null:
-			continue
 		spr.modulate = Color(1, 1, 1).lerp(Color(0.85, 0.95, 0.8), rng.randf())
-		_grass.append([spr, spr.material, p])
+		_grass.append(spr)
 	# фонари вдоль главной тропы
 	var lantern_rows: Array[int] = [200, 380, 560, 760, 940]
 	for y in lantern_rows:
@@ -257,7 +264,8 @@ func _build_wildlife() -> void:
 	_anim_root = Node2D.new()
 	_anim_root.z_index = 4
 	add_child(_anim_root)
-	for i in range(28):
+	var bf_counts: Array[int] = [8, 16, 28]
+	for i in range(bf_counts[_quality]):
 		var b := Node2D.new()
 		b.set_script(preload("res://scripts/entities/butterfly.gd"))
 		b.position = Vector2(randf_range(-HALF.x * 0.8, HALF.x * 0.8), randf_range(-HALF.y * 0.8, HALF.y * 0.8))
@@ -330,25 +338,12 @@ func _build_collision() -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	wind = sin(_t * 0.7) * 0.5 + sin(_t * 1.9) * 0.3
-	for g in _grass:
-		var spr: Sprite2D = g[0]
-		var m: ShaderMaterial = g[1]
-		var p: Vector2 = g[2]
-		var d: float = p.distance_to(player_pos)
-		if d > 120.0:
-			continue
-		var push := 0.0
-		if d < 46.0:
-			push = signf(p.x - player_pos.x) * (1.0 - d / 46.0)
-		var cur_v = m.get_shader_parameter("player_push")
-		var cur: float = float(cur_v) if cur_v != null else 0.0
-		if absf(cur) > 0.001 or absf(push) > 0.001:
-			m.set_shader_parameter("player_push", lerpf(cur, push, delta * 8.0))
-	# высокие объекты перед игроком становятся полупрозрачными
+	RenderingServer.global_shader_parameter_set("player_world_pos", player_pos)
+	# высокие объекты перед игроком становятся полупрозрачными (только рядом)
 	for t in _tall:
 		var spr: Sprite2D = t
 		var dp := spr.position - player_pos
-		if dp.length_squared() > 250000.0:
+		if dp.length_squared() > 160000.0:
 			if spr.modulate.a < 1.0:
 				spr.modulate.a = 1.0
 			continue
@@ -357,3 +352,18 @@ func _process(delta: float) -> void:
 		var covering := dp.y > 0.0 and dp.y < h * 0.95 and absf(dp.x) < w * 0.45
 		var target_a := 0.4 if covering else 1.0
 		spr.modulate.a = lerpf(spr.modulate.a, target_a, delta * 8.0)
+	# отсечение: скрываем всё, что далеко от камеры (раз в 0.25 с)
+	_cull_timer -= delta
+	if _cull_timer <= 0.0:
+		_cull_timer = 0.25
+		var cam := get_viewport().get_camera_2d()
+		if cam != null:
+			var vs := get_viewport().get_visible_rect().size / cam.zoom
+			var r := Rect2(cam.get_screen_center_position() - vs * 0.5, vs).grow(350.0)
+			for c in props_root.get_children():
+				if c is Sprite2D:
+					var s := c as Sprite2D
+					s.visible = r.has_point(s.position)
+			for c in get_children():
+				if c is Sprite2D and (c as Sprite2D).texture == TEX_SHADOW:
+					(c as Sprite2D).visible = r.has_point((c as Sprite2D).position)

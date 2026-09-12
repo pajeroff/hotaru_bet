@@ -11,13 +11,14 @@ func _ready() -> void:
 	var bg = preload("res://scripts/ui/menu_background.gd").new()
 	add_child(bg)
 
+	var cc := CenterContainer.new()
+	cc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(cc)
 	var center := VBoxContainer.new()
-	center.set_anchors_preset(Control.PRESET_CENTER)
-	center.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	center.grow_vertical = Control.GROW_DIRECTION_BOTH
 	center.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_theme_constant_override("separation", 14)
-	add_child(center)
+	cc.add_child(center)
 
 	var t := UITheme.title("Хотару", 84)
 	center.add_child(t)

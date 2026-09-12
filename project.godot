@@ -88,12 +88,18 @@ common/physics_interpolation=true
 [rendering]
 
 renderer/rendering_method="forward_plus"
+renderer/rendering_method.mobile="gl_compatibility"
 textures/canvas_textures/default_texture_filter=3
-2d/shadow_atlas/size=4096
-anti_aliasing/quality/msaa_2d=2
-lights_and_shadows/positional_shadow/soft_shadow_filter_quality=3
+2d/shadow_atlas/size=2048
 environment/defaults/default_clear_color=Color(0.85, 0.82, 0.9, 1)
 
 [audio]
 
 buses/default_bus_layout="res://default_bus_layout.tres"
+
+[shader_globals]
+
+player_world_pos={
+"type": "vec2",
+"value": Vector2(0, 0)
+}

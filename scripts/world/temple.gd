@@ -40,9 +40,9 @@ func _ready() -> void:
 	_light.texture_scale = 3.0
 	_light.energy = 0.8
 	_light.position = Vector2(0, -60)
-	_light.shadow_enabled = true
-	_light.shadow_filter = PointLight2D.SHADOW_FILTER_PCF13
-	_light.shadow_filter_smooth = 6.0
+	_light.shadow_enabled = Settings.particle_quality >= 2
+	_light.shadow_filter = PointLight2D.SHADOW_FILTER_PCF5
+	_light.shadow_filter_smooth = 3.0
 	_light.shadow_color = Color(0.1, 0.08, 0.2, 0.45)
 	add_child(_light)
 	var occ := LightOccluder2D.new()
@@ -102,7 +102,8 @@ func _update_target() -> void:
 	var glows: Array[float] = [0.35, 0.7, 1.1, 1.4, 1.7]
 	var amounts: Array[int] = [12, 24, 40, 56, 72]
 	_target_glow = glows[lvl]
-	_embers.amount = amounts[lvl]
+	var qmul: Array[float] = [0.4, 0.7, 1.0]
+	_embers.amount = maxi(int(amounts[lvl] * qmul[clampi(Settings.particle_quality, 0, 2)]), 4)
 
 func _pulse_burst() -> void:
 	var tw := create_tween()

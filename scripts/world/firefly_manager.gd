@@ -18,7 +18,8 @@ func _process(delta: float) -> void:
 	_flies = _flies.filter(func(f): return is_instance_valid(f))
 	var phase := GameState.get_phase()
 	var weather := GameState.weather
-	var target := FireflyData.target_count(phase, weather)
+	var qmul: Array[float] = [0.6, 0.8, 1.0]
+	var target := int(FireflyData.target_count(phase, weather) * qmul[clampi(Settings.particle_quality, 0, 2)])
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
 		_spawn_timer = randf_range(1.0, 3.0)

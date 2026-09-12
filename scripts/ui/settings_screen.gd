@@ -30,12 +30,13 @@ func _build() -> void:
 		dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 		add_child(dim)
 
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(center)
 	var panel := PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	panel.grow_vertical = Control.GROW_DIRECTION_BOTH
 	panel.custom_minimum_size = Vector2(760, 560)
-	add_child(panel)
+	center.add_child(panel)
 
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
@@ -133,6 +134,7 @@ func _graphics_tab() -> Control:
 		Settings.particle_quality = i
 		Settings.save()
 		Settings.settings_changed.emit()
+		Settings.quality_changed.emit()
 	)
 	_row(v, "PARTICLES", pq)
 

@@ -9,6 +9,7 @@ var _controls: Label
 var _jar_panel: Control
 var _fps: Label
 var _speed: Label
+var _speed_buttons: Array = []
 var _fireflies = null
 
 func _ready() -> void:
@@ -67,7 +68,7 @@ func _ready() -> void:
 	_saved.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	_saved.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_saved.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_saved.position -= Vector2(20, 24)
+	_saved.position -= Vector2(20, 100)
 	_saved.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
 	_saved.add_theme_constant_override("shadow_outline_size", 6)
 	_saved.modulate.a = 0.0
@@ -79,12 +80,50 @@ func _ready() -> void:
 	_fps.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
 	_fps.add_theme_constant_override("shadow_outline_size", 4)
 	add_child(_fps)
-	_speed = UITheme.label("", 16, UITheme.ACCENT_SOFT)
-	_speed.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_speed.position = Vector2(16, 106)
-	_speed.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
-	_speed.add_theme_constant_override("shadow_outline_size", 4)
-	add_child(_speed)
+	# панель скорости времени (справа снизу): ×1 · ×1.5 · ×2
+	var sp := PanelContainer.new()
+	sp.theme = hud_theme
+	sp.add_theme_stylebox_override("panel", st)
+	sp.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	sp.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	sp.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	sp.offset_left = -16
+	sp.offset_right = -16
+	sp.offset_top = -56
+	sp.offset_bottom = -56
+	add_child(sp)
+	var sh := HBoxContainer.new()
+	sh.add_theme_constant_override("separation", 6)
+	sp.add_child(sh)
+	_speed = UITheme.label("⏱", 16, UITheme.TEXT_LIGHT)
+	sh.add_child(_speed)
+	var speeds: Array[String] = ["normal", "fast", "faster"]
+	var labels: Array[String] = ["×1", "×1.5", "×2"]
+	for i in range(3):
+		var b := Button.new()
+		b.text = labels[i]
+		b.toggle_mode = true
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(56, 0)
+		b.add_theme_font_size_override("font_size", 16)
+		var sb := UITheme._btn_style(UITheme.BUTTON)
+		sb.content_margin_left = 8
+		sb.content_margin_right = 8
+		sb.content_margin_top = 4
+		sb.content_margin_bottom = 4
+		b.add_theme_stylebox_override("normal", sb)
+		var sbp := UITheme._btn_style(UITheme.ACCENT, true)
+		sbp.content_margin_left = 8
+		sbp.content_margin_right = 8
+		sbp.content_margin_top = 4
+		sbp.content_margin_bottom = 4
+		b.add_theme_stylebox_override("pressed", sbp)
+		b.add_theme_stylebox_override("hover", sb)
+		b.pressed.connect(_on_speed_pressed.bind(speeds[i]))
+		sh.add_child(b)
+		_speed_buttons.append(b)
+	Settings.settings_changed.connect(_refresh_speed)
+	_refresh_speed()
 	GameState.jar_changed.connect(_refresh_jar)
 	SaveManager.game_saved.connect(func(_s): show_saved())
 	_refresh_jar()
@@ -97,12 +136,22 @@ func _process(delta: float) -> void:
 	_fps.visible = Settings.show_fps
 	if Settings.show_fps:
 		_fps.text = "%d FPS · %.1f ms" % [Engine.get_frames_per_second(), Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0]
-	var ts := Settings.get_time_scale()
-	_speed.text = "" if is_equal_approx(ts, 1.0) else ("⏩ ×%.1f" % ts)
 	var want: bool = false
 	if _fireflies != null and not get_tree().paused:
 		want = _fireflies.nearest != null
 	_hint.modulate.a = move_toward(_hint.modulate.a, 1.0 if want else 0.0, delta * 5.0)
+
+func _on_speed_pressed(speed: String) -> void:
+	Settings.time_speed = speed
+	Settings.save()
+	Settings.settings_changed.emit()
+	AudioManager.play_sfx("click", -10.0)
+
+func _refresh_speed() -> void:
+	var speeds: Array[String] = ["normal", "fast", "faster"]
+	for i in range(_speed_buttons.size()):
+		var b: Button = _speed_buttons[i]
+		b.set_pressed_no_signal(Settings.time_speed == speeds[i])
 
 func _refresh_jar() -> void:
 	var used := GameState.jar_used_slots()

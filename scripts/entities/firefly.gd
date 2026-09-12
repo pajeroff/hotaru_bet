@@ -55,14 +55,17 @@ func _ready() -> void:
 	outline.show_behind_parent = true
 	_core.add_child(outline)
 	add_child(_core)
+	var q := clampi(Settings.particle_quality, 0, 2)
 	_light = PointLight2D.new()
 	_light.texture = TEX_LIGHT
 	_light.color = color
 	_light.texture_scale = 0.45 * glow_size
 	_light.energy = 0.0
+	_light.enabled = q >= 2 or rarity != "common"
 	add_child(_light)
 	_trail = GPUParticles2D.new()
-	_trail.amount = 16 if rarity == "common" else 28
+	_trail.amount = (6 if rarity == "common" else 12) if q < 2 else (16 if rarity == "common" else 28)
+	_trail.visible = q >= 1
 	_trail.lifetime = 0.9
 	_trail.texture = TEX_GLOW
 	_trail.local_coords = false

@@ -12,12 +12,13 @@ func _ready() -> void:
 	var bg = preload("res://scripts/ui/menu_background.gd").new()
 	add_child(bg)
 
+	var cc := CenterContainer.new()
+	cc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(cc)
 	var root := VBoxContainer.new()
-	root.set_anchors_preset(Control.PRESET_CENTER)
-	root.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	root.grow_vertical = Control.GROW_DIRECTION_BOTH
 	root.add_theme_constant_override("separation", 18)
-	add_child(root)
+	cc.add_child(root)
 
 	root.add_child(UITheme.title(tr("LOAD_TITLE"), 48))
 

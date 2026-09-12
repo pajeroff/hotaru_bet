@@ -2,6 +2,7 @@ extends Node
 ## Настройки игры: графика, звук, управление, игра. Сохраняются автоматически.
 
 signal settings_changed
+signal quality_changed
 signal language_changed
 
 const PATH := "user://settings.cfg"
@@ -13,7 +14,7 @@ const FPS_LIMITS: Array[int] = [0, 30, 60, 90, 120, 144, 165, 240]
 var fullscreen := true
 var resolution_index := 0
 var vsync := true
-var particle_quality := 1 # 0 low, 1 medium, 2 high
+var particle_quality := 1 # 0 low, 1 medium, 2 high — общий пресет качества графики
 var brightness := 1.0
 var fps_limit_index := 0 # индекс в FPS_LIMITS, 0 = без ограничения
 var show_fps := false
@@ -196,7 +197,7 @@ const STRINGS := {
 	"FULLSCREEN": ["Полноэкранный режим", "Fullscreen"],
 	"RESOLUTION": ["Разрешение экрана", "Resolution"],
 	"VSYNC": ["Вертикальная синхронизация", "V-Sync"],
-	"PARTICLES": ["Качество частиц", "Particle quality"],
+	"PARTICLES": ["Качество графики", "Graphics quality"],
 	"LOW": ["Низкое", "Low"],
 	"MEDIUM": ["Среднее", "Medium"],
 	"HIGH": ["Высокое", "High"],
