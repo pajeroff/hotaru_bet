@@ -4,7 +4,8 @@ extends Node2D
 var _t := randf() * 100.0
 var _seed := randf() * 10.0
 var _home := Vector2.ZERO
-var _color := [Color(1.0, 0.85, 0.5), Color(0.75, 0.85, 1.0), Color(1.0, 0.8, 0.9), Color(1.0, 1.0, 0.95)][randi() % 4]
+const COLORS: Array[Color] = [Color(1.0, 0.85, 0.5), Color(0.75, 0.85, 1.0), Color(1.0, 0.8, 0.9), Color(1.0, 1.0, 0.95)]
+var _color: Color = COLORS[randi() % 4]
 var _alpha := 0.0
 
 func _ready() -> void:

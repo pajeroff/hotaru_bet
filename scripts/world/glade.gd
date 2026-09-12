@@ -11,28 +11,8 @@ const POND2_RADII := Vector2(150, 100)
 const TEX_GRASS := preload("res://assets/textures/grass.png")
 const TEX_PATH := preload("res://assets/textures/path.png")
 const TEX_SHADOW := preload("res://assets/textures/shadow_blob.png")
-const SPR := {
-	"tree_a": preload("res://assets/sprites/tree_a.png"),
-	"tree_b": preload("res://assets/sprites/tree_b.png"),
-	"tree_sakura": preload("res://assets/sprites/tree_sakura.png"),
-	"bush": preload("res://assets/sprites/bush.png"),
-	"bush_flower": preload("res://assets/sprites/bush_flower.png"),
-	"rock": preload("res://assets/sprites/rock.png"),
-	"lantern": preload("res://assets/sprites/lantern.png"),
-	"grass_tuft": preload("res://assets/sprites/grass_tuft.png"),
-	"bench": preload("res://assets/sprites/bench.png"),
-	"well": preload("res://assets/sprites/well.png"),
-	"torii": preload("res://assets/sprites/torii.png"),
-	"stupa": preload("res://assets/sprites/stupa.png"),
-	"mushrooms": preload("res://assets/sprites/mushrooms.png"),
-	"log": preload("res://assets/sprites/log.png"),
-	"flowers": preload("res://assets/sprites/flowers.png"),
-	"signpost": preload("res://assets/sprites/signpost.png"),
-	"reeds": preload("res://assets/sprites/reeds.png"),
-	"tree_old": preload("res://assets/sprites/tree_old.png"),
-	"fox_statue": preload("res://assets/sprites/fox_statue.png"),
-	"stump": preload("res://assets/sprites/stump.png"),
-}
+const SPRITE_NAMES: Array[String] = ["tree_a", "tree_b", "tree_sakura", "bush", "bush_flower", "rock", "lantern", "grass_tuft", "bench", "well", "torii", "stupa", "mushrooms", "log", "flowers", "signpost", "reeds", "tree_old", "fox_statue", "stump"]
+var SPR := {}
 const SWAY_KINDS: Array[String] = ["tree_a", "tree_b", "tree_sakura", "tree_old", "bush", "bush_flower", "grass_tuft", "flowers", "reeds", "mushrooms"]
 const TALL_KINDS: Array[String] = ["tree_a", "tree_b", "tree_sakura", "tree_old", "torii", "well"]
 const SH_WIND := preload("res://shaders/wind_sway.gdshader")
@@ -51,6 +31,12 @@ var _birds: Array = []
 var _anim_root: Node2D
 
 func _ready() -> void:
+	for n in SPRITE_NAMES:
+		var tex := load("res://assets/sprites/%s.png" % n) as Texture2D
+		if tex == null:
+			push_warning("Спрайт не найден или не импортирован: " + n)
+			continue
+		SPR[n] = tex
 	_build_ground()
 	_build_pond()
 	props_root = Node2D.new()
@@ -149,6 +135,8 @@ func _build_pond() -> void:
 # ---------- пропсы ----------
 func _add_prop(kind: String, pos: Vector2, scale_mul := 1.0, sway := true, shadow := 1.0) -> Sprite2D:
 	var spr := Sprite2D.new()
+	if not SPR.has(kind):
+		return spr
 	spr.texture = SPR[kind]
 	spr.position = pos
 	spr.scale = Vector2.ONE * scale_mul
@@ -253,6 +241,8 @@ func _populate() -> void:
 		var p := Vector2(rng.randf_range(-HALF.x * 0.92, HALF.x * 0.92), rng.randf_range(-HALF.y * 0.92, HALF.y * 0.92))
 		if p.length() < 220 or _in_pond(p, 1.15) or _on_path(p): continue
 		var spr := _add_prop("grass_tuft", p, rng.randf_range(0.45, 0.9), true, 0.0)
+		if spr.material == null:
+			continue
 		spr.modulate = Color(1, 1, 1).lerp(Color(0.85, 0.95, 0.8), rng.randf())
 		_grass.append([spr, spr.material, p])
 	# фонари вдоль главной тропы
