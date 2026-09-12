@@ -50,6 +50,7 @@ func _ready() -> void:
 
 	var cam = CameraScript.new()
 	cam.target = player
+	cam.set_limits(glade.HALF)
 	add_child(cam)
 	cam.make_current()
 	cam.global_position = player.global_position
@@ -91,6 +92,20 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("interact"):
 		fireflies.try_catch()
 		get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.is_pressed() and not event.is_echo():
+		var k := event as InputEventKey
+		var code: int = k.physical_keycode if k.physical_keycode != 0 else k.keycode
+		var speed := ""
+		match code:
+			KEY_1, KEY_KP_1: speed = "normal"
+			KEY_2, KEY_KP_2: speed = "fast"
+			KEY_3, KEY_KP_3: speed = "faster"
+		if speed != "":
+			Settings.time_speed = speed
+			Settings.save()
+			Settings.settings_changed.emit()
+			AudioManager.play_sfx("click", -10.0)
+			get_viewport().set_input_as_handled()
 
 func _open_pause() -> void:
 	_overlay_open = true

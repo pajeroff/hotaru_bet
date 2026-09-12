@@ -62,7 +62,8 @@ func spawn_one() -> void:
 	f.setup(data, player)
 	var p := Vector2.ZERO
 	for i in range(10):
-		p = Vector2(randf_range(-780, 780), randf_range(-520, 520))
+		p = Vector2(randf_range(-1560, 1560), randf_range(-1080, 1080))
+		if player != null and p.distance_to(player.global_position) > 900: continue
 		if p.length() > 120 and (player == null or p.distance_to(player.global_position) > 120):
 			break
 	if data["emotion"] == "secret" and player != null:

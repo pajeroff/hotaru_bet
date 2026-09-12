@@ -52,14 +52,14 @@ static func color_of(data: Dictionary) -> Color:
 	return Color(c[0], c[1], c[2])
 
 static func target_count(phase: String, weather: String) -> int:
-	var n := 6
+	var n := 10
 	match phase:
-		"dawn": n = 9
-		"morning": n = 10
-		"day": n = 4
-		"sunset": n = 8
-		"evening": n = 12
-		"night": n = 16
+		"dawn": n = 16
+		"morning": n = 18
+		"day": n = 7
+		"sunset": n = 14
+		"evening": n = 22
+		"night": n = 28
 	if weather == "silence": n = maxi(n - 4, 2)
 	if weather == "bloom": n += 3
 	return n

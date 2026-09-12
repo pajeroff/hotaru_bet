@@ -7,13 +7,16 @@ signal language_changed
 const PATH := "user://settings.cfg"
 const ACTIONS := ["move_up", "move_down", "move_left", "move_right", "interact", "open_jar", "toggle_lantern", "pause"]
 const RESOLUTIONS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
-const TIME_SPEEDS := {"slow": 0.5, "normal": 1.0, "fast": 2.0}
+const TIME_SPEEDS := {"normal": 1.0, "fast": 1.5, "faster": 2.0}
+const FPS_LIMITS: Array[int] = [0, 30, 60, 90, 120, 144, 165, 240]
 
 var fullscreen := true
 var resolution_index := 0
 var vsync := true
 var particle_quality := 1 # 0 low, 1 medium, 2 high
 var brightness := 1.0
+var fps_limit_index := 0 # индекс в FPS_LIMITS, 0 = без ограничения
+var show_fps := false
 
 var master_volume := 0.8
 var music_volume := 0.7
@@ -45,10 +48,14 @@ func _load() -> void:
 	vsync = cfg.get_value("graphics", "vsync", vsync)
 	particle_quality = cfg.get_value("graphics", "particle_quality", particle_quality)
 	brightness = cfg.get_value("graphics", "brightness", brightness)
+	fps_limit_index = int(cfg.get_value("graphics", "fps_limit_index", fps_limit_index))
+	show_fps = bool(cfg.get_value("graphics", "show_fps", show_fps))
 	master_volume = cfg.get_value("audio", "master", master_volume)
 	music_volume = cfg.get_value("audio", "music", music_volume)
 	sfx_volume = cfg.get_value("audio", "sfx", sfx_volume)
 	time_speed = cfg.get_value("game", "time_speed", time_speed)
+	if not TIME_SPEEDS.has(time_speed):
+		time_speed = "normal"
 	language = cfg.get_value("game", "language", language)
 	for a in ACTIONS:
 		var code: int = int(cfg.get_value("controls", a, -1))
@@ -62,6 +69,8 @@ func save() -> void:
 	cfg.set_value("graphics", "vsync", vsync)
 	cfg.set_value("graphics", "particle_quality", particle_quality)
 	cfg.set_value("graphics", "brightness", brightness)
+	cfg.set_value("graphics", "fps_limit_index", fps_limit_index)
+	cfg.set_value("graphics", "show_fps", show_fps)
 	cfg.set_value("audio", "master", master_volume)
 	cfg.set_value("audio", "music", music_volume)
 	cfg.set_value("audio", "sfx", sfx_volume)
@@ -95,6 +104,8 @@ func apply_graphics() -> void:
 			var origin: Vector2i = DisplayServer.screen_get_position()
 			DisplayServer.window_set_position(origin + Vector2i((screen_size - res) / 2.0))
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
+	Engine.max_fps = FPS_LIMITS[clampi(fps_limit_index, 0, FPS_LIMITS.size() - 1)]
+	Engine.physics_ticks_per_second = 120
 
 func apply_audio() -> void:
 	_set_bus("Master", master_volume)
@@ -190,6 +201,10 @@ const STRINGS := {
 	"MEDIUM": ["Среднее", "Medium"],
 	"HIGH": ["Высокое", "High"],
 	"BRIGHTNESS": ["Яркость", "Brightness"],
+	"FPS_LIMIT": ["Ограничение кадров", "FPS limit"],
+	"UNLIMITED": ["Без ограничения", "Unlimited"],
+	"SHOW_FPS": ["Счётчик кадров", "FPS counter"],
+	"BLOOM": ["Свечение (bloom)", "Bloom"],
 	"VOL_MASTER": ["Общая громкость", "Master volume"],
 	"VOL_MUSIC": ["Громкость музыки", "Music volume"],
 	"VOL_SFX": ["Звуки природы и эффекты", "Nature & effects"],
@@ -204,9 +219,10 @@ const STRINGS := {
 	"PRESS_KEY": ["Нажмите клавишу…", "Press a key…"],
 	"RESET_DEFAULT": ["Сбросить по умолчанию", "Reset to default"],
 	"TIME_SPEED": ["Скорость времени", "Time speed"],
-	"SLOW": ["Медленно", "Slow"],
-	"NORMAL": ["Обычно", "Normal"],
-	"FAST": ["Быстро", "Fast"],
+	"NORMAL": ["Обычно (×1)", "Normal (×1)"],
+	"FAST": ["Быстро (×1.5)", "Fast (×1.5)"],
+	"FASTER": ["Очень быстро (×2)", "Very fast (×2)"],
+	"TIME_HINT": ["1 / 2 / 3 — скорость времени", "1 / 2 / 3 — time speed"],
 	"LANGUAGE": ["Язык", "Language"],
 	"PAUSE_TITLE": ["Пауза", "Paused"],
 	"RESUME": ["Продолжить", "Resume"],
@@ -267,7 +283,7 @@ const STRINGS := {
 	"FF_mist": ["Туманный шёпот", "Mist Whisper"],
 	"FF_petal": ["Лепесток", "Petal"],
 	"FF_star": ["Упавшая звезда", "Fallen Star"],
-	"CONTROLS_HINT": ["WASD — идти · E — поймать · I — банка · F — фонарь · Esc — пауза", "WASD — move · E — catch · I — jar · F — lantern · Esc — pause"],
+	"CONTROLS_HINT": ["WASD — идти · E — поймать · I — банка · F — фонарь · 1/2/3 — время · колесо — зум · Esc — пауза", "WASD — move · E — catch · I — jar · F — lantern · 1/2/3 — time · wheel — zoom · Esc — pause"],
 }
 
 func _install_translations() -> void:

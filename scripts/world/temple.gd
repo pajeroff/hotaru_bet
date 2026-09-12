@@ -43,7 +43,7 @@ func _ready() -> void:
 	_light.shadow_enabled = true
 	_light.shadow_filter = PointLight2D.SHADOW_FILTER_PCF13
 	_light.shadow_filter_smooth = 6.0
-	_light.shadow_color = Color(0.1, 0.08, 0.2, 0.6)
+	_light.shadow_color = Color(0.1, 0.08, 0.2, 0.45)
 	add_child(_light)
 	var occ := LightOccluder2D.new()
 	var poly := OccluderPolygon2D.new()
@@ -113,9 +113,9 @@ func _process(delta: float) -> void:
 	_t += delta
 	_glow = lerpf(_glow, _target_glow, delta * 0.5)
 	var beat := 0.85 + 0.15 * (0.5 + 0.5 * sin(_t * 1.4)) * (0.5 + 0.5 * sin(_t * 2.8))
-	_light.energy = _glow * beat * 1.3
-	_light.texture_scale = 2.6 + _glow * 0.8
-	_mat.set_shader_parameter("glow", _glow * beat)
+	_light.energy = _glow * beat * 0.7
+	_light.texture_scale = 2.4 + _glow * 0.6
+	_mat.set_shader_parameter("glow", _glow * beat * 0.6)
 	for i in range(_lantern_lights.size()):
 		var l: PointLight2D = _lantern_lights[i]
-		l.energy = 0.45 + 0.25 * sin(_t * 3.0 + i * 1.7)
+		l.energy = 0.3 + 0.15 * sin(_t * 3.0 + i * 1.7)

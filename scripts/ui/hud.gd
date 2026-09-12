@@ -7,6 +7,8 @@ var _hint: Label
 var _saved: Label
 var _controls: Label
 var _jar_panel: Control
+var _fps: Label
+var _speed: Label
 var _fireflies = null
 
 func _ready() -> void:
@@ -71,6 +73,18 @@ func _ready() -> void:
 	_saved.modulate.a = 0.0
 	add_child(_saved)
 
+	_fps = UITheme.label("", 14, Color(0.8, 1.0, 0.8, 0.9))
+	_fps.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_fps.position = Vector2(16, 84)
+	_fps.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	_fps.add_theme_constant_override("shadow_outline_size", 4)
+	add_child(_fps)
+	_speed = UITheme.label("", 16, UITheme.ACCENT_SOFT)
+	_speed.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_speed.position = Vector2(16, 106)
+	_speed.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	_speed.add_theme_constant_override("shadow_outline_size", 4)
+	add_child(_speed)
 	GameState.jar_changed.connect(_refresh_jar)
 	SaveManager.game_saved.connect(func(_s): show_saved())
 	_refresh_jar()
@@ -80,6 +94,11 @@ func set_firefly_manager(fm) -> void:
 
 func _process(delta: float) -> void:
 	_time_label.text = "%s · %s\n%s %d · %s" % [GameState.get_time_string(), tr("PHASE_" + GameState.get_phase()), tr("DAY"), GameState.day, tr("W_" + GameState.weather)]
+	_fps.visible = Settings.show_fps
+	if Settings.show_fps:
+		_fps.text = "%d FPS · %.1f ms" % [Engine.get_frames_per_second(), Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0]
+	var ts := Settings.get_time_scale()
+	_speed.text = "" if is_equal_approx(ts, 1.0) else ("⏩ ×%.1f" % ts)
 	var want: bool = false
 	if _fireflies != null and not get_tree().paused:
 		want = _fireflies.nearest != null

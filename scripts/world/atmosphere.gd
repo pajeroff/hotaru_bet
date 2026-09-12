@@ -106,7 +106,7 @@ func _make_weather_particles(tex: Texture2D, amount: int, vel: Vector3, life: fl
 func _apply_quality() -> void:
 	var q := clampi(Settings.particle_quality, 0, 2)
 	var muls: Array[float] = [0.35, 0.7, 1.0]
-	var blooms: Array[float] = [0.3, 0.5, 0.65]
+	var blooms: Array[float] = [0.15, 0.25, 0.32]
 	var mul: float = muls[q]
 	_rain.amount_ratio = mul
 	_snow.amount_ratio = mul
@@ -121,11 +121,11 @@ func _light_for_time(t: float) -> Color:
 	var keys := [
 		[0.0, Color(0.30, 0.36, 0.66)],
 		[4.5, Color(0.32, 0.38, 0.68)],
-		[6.0, Color(0.95, 0.70, 0.66)],
-		[8.0, Color(1.00, 0.94, 0.86)],
-		[12.0, Color(1.00, 1.00, 0.98)],
-		[16.5, Color(1.00, 0.96, 0.86)],
-		[18.0, Color(1.00, 0.76, 0.52)],
+		[6.0, Color(0.88, 0.68, 0.64)],
+		[8.0, Color(0.96, 0.92, 0.84)],
+		[12.0, Color(0.95, 0.95, 0.92)],
+		[16.5, Color(0.96, 0.92, 0.82)],
+		[18.0, Color(0.92, 0.72, 0.50)],
 		[19.5, Color(0.78, 0.55, 0.62)],
 		[21.5, Color(0.40, 0.44, 0.72)],
 		[24.0, Color(0.30, 0.36, 0.66)],

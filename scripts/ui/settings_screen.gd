@@ -148,6 +148,26 @@ func _graphics_tab() -> Control:
 		Settings.settings_changed.emit()
 	)
 	_row(v, "BRIGHTNESS", _brightness_slider)
+
+	var fps := OptionButton.new()
+	for lim in Settings.FPS_LIMITS:
+		fps.add_item(tr("UNLIMITED") if lim == 0 else str(lim))
+	fps.selected = clampi(Settings.fps_limit_index, 0, Settings.FPS_LIMITS.size() - 1)
+	fps.item_selected.connect(func(i):
+		Settings.fps_limit_index = i
+		Settings.apply_graphics()
+		Settings.save()
+	)
+	_row(v, "FPS_LIMIT", fps)
+
+	var sf := CheckButton.new()
+	sf.button_pressed = Settings.show_fps
+	sf.toggled.connect(func(on):
+		Settings.show_fps = on
+		Settings.save()
+		Settings.settings_changed.emit()
+	)
+	_row(v, "SHOW_FPS", sf)
 	return _wrap(v)
 
 func _slider(value: float, setter: Callable) -> HSlider:
@@ -235,13 +255,15 @@ func _on_language_selected(i: int) -> void:
 func _game_tab() -> Control:
 	var v := _tab("TAB_GAME")
 	var ts := OptionButton.new()
-	ts.add_item(tr("SLOW"))
 	ts.add_item(tr("NORMAL"))
 	ts.add_item(tr("FAST"))
-	ts.selected = ["slow", "normal", "fast"].find(Settings.time_speed)
+	ts.add_item(tr("FASTER"))
+	var speeds: Array[String] = ["normal", "fast", "faster"]
+	ts.selected = maxi(speeds.find(Settings.time_speed), 0)
 	ts.item_selected.connect(func(i):
-		Settings.time_speed = ["slow", "normal", "fast"][i]
+		Settings.time_speed = speeds[i]
 		Settings.save()
+		Settings.settings_changed.emit()
 	)
 	_row(v, "TIME_SPEED", ts)
 

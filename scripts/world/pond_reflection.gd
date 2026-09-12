@@ -1,8 +1,8 @@
 extends Node2D
 ## Отражения светлячков в пруду.
 
-const POND_CENTER := Vector2(430, 250)
-const POND_RADII := Vector2(160, 100)
+const POND_CENTER := Vector2(760, 480)
+const POND_RADII := Vector2(260, 160)
 const TEX_GLOW := preload("res://assets/textures/particle_glow.png")
 var fireflies = null
 var _t := 0.0
