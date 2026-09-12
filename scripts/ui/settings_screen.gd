@@ -13,6 +13,14 @@ func _ready() -> void:
 	theme = UITheme.make_theme()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_build()
+
+func _build() -> void:
+	for c in get_children():
+		c.queue_free()
+	_key_buttons.clear()
+	_rebinding_action = ""
+	_rebind_button = null
 	if not embedded:
 		var bg = preload("res://scripts/ui/menu_background.gd").new()
 		add_child(bg)
@@ -82,7 +90,8 @@ func _tab(name_key: String) -> VBoxContainer:
 	return v
 
 func _wrap(v: VBoxContainer) -> Control:
-	return v.get_meta("container")
+	var c: Control = v.get_meta("container")
+	return c
 
 func _graphics_tab() -> Control:
 	var v := _tab("TAB_GRAPHICS")
@@ -199,12 +208,14 @@ func _start_rebind(action: String, b: Button) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _rebinding_action == "":
 		return
-	if event is InputEventKey and event.pressed:
+	if event is InputEventKey and event.is_pressed():
 		var k := event as InputEventKey
-		if k.physical_keycode == KEY_ESCAPE:
-			_rebind_button.text = Settings.get_action_key_name(_rebinding_action)
+		var code: int = k.physical_keycode if k.physical_keycode != 0 else k.keycode
+		if code == KEY_ESCAPE:
+			if _rebind_button != null:
+				_rebind_button.text = Settings.get_action_key_name(_rebinding_action)
 		else:
-			Settings.rebind(_rebinding_action, k.physical_keycode)
+			Settings.rebind(_rebinding_action, code)
 		_rebinding_action = ""
 		_rebind_button = null
 		_refresh_keys()
@@ -212,7 +223,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _refresh_keys() -> void:
 	for a in _key_buttons:
-		_key_buttons[a].text = Settings.get_action_key_name(a)
+		var b: Button = _key_buttons[a]
+		if is_instance_valid(b):
+			b.text = Settings.get_action_key_name(a)
+
+func _on_language_selected(i: int) -> void:
+	Settings.set_language("ru" if i == 0 else "en")
+	# Перестраиваем экран на месте, чтобы язык применился сразу
+	call_deferred("_build")
 
 func _game_tab() -> Control:
 	var v := _tab("TAB_GAME")
@@ -231,17 +249,6 @@ func _game_tab() -> Control:
 	lang.add_item("Русский")
 	lang.add_item("English")
 	lang.selected = 0 if Settings.language == "ru" else 1
-	lang.item_selected.connect(func(i):
-		Settings.set_language("ru" if i == 0 else "en")
-		# Перестраиваем экран, чтобы применить язык сразу
-		var was_embedded := embedded
-		var parent := get_parent()
-		var s := load("res://scenes/ui/settings_screen.tscn").instantiate()
-		s.embedded = was_embedded
-		for c in closed.get_connections():
-			s.closed.connect(c["callable"])
-		parent.add_child(s)
-		queue_free()
-	)
+	lang.item_selected.connect(_on_language_selected)
 	_row(v, "LANGUAGE", lang)
 	return _wrap(v)

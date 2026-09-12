@@ -38,6 +38,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_music_player = AudioStreamPlayer.new()
 	var gen := AudioStreamGenerator.new()
+	gen.mix_rate_mode = AudioStreamGenerator.MIX_RATE_CUSTOM
 	gen.mix_rate = SAMPLE_RATE
 	gen.buffer_length = 0.25
 	_music_player.stream = gen
@@ -48,6 +49,7 @@ func _ready() -> void:
 
 	_amb_player = AudioStreamPlayer.new()
 	var gen2 := AudioStreamGenerator.new()
+	gen2.mix_rate_mode = AudioStreamGenerator.MIX_RATE_CUSTOM
 	gen2.mix_rate = SAMPLE_RATE
 	gen2.buffer_length = 0.25
 	_amb_player.stream = gen2
@@ -58,6 +60,10 @@ func _ready() -> void:
 	_set_chord(CHORDS_DAY[0])
 
 func _process(_delta: float) -> void:
+	if _music_playback == null and _music_player.playing:
+		_music_playback = _music_player.get_stream_playback() as AudioStreamGeneratorPlayback
+	if _amb_playback == null and _amb_player.playing:
+		_amb_playback = _amb_player.get_stream_playback() as AudioStreamGeneratorPlayback
 	_fill_music()
 	_fill_ambient()
 

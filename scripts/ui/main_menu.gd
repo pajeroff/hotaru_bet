@@ -3,6 +3,8 @@ extends Control
 func _ready() -> void:
 	theme = UITheme.make_theme()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	GameState.running = false
+	Settings.apply_audio()
 	AudioManager.set_mood("menu")
 	AudioManager.set_ambient("wind", 0.25)
 

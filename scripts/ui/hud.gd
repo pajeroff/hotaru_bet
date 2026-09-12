@@ -11,9 +11,9 @@ var _fireflies = null
 
 func _ready() -> void:
 	layer = 10
-	var theme := UITheme.make_theme(true)
+	var hud_theme := UITheme.make_theme(true)
 	var top := PanelContainer.new()
-	top.theme = theme
+	top.theme = hud_theme
 	top.position = Vector2(16, 16)
 	top.custom_minimum_size = Vector2(230, 0)
 	var st := UITheme._panel_style(UITheme.PANEL_DARK)
@@ -27,7 +27,7 @@ func _ready() -> void:
 	top.add_child(_time_label)
 
 	_jar_panel = PanelContainer.new()
-	_jar_panel.theme = theme
+	_jar_panel.theme = hud_theme
 	_jar_panel.add_theme_stylebox_override("panel", st)
 	_jar_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	_jar_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
@@ -80,7 +80,9 @@ func set_firefly_manager(fm) -> void:
 
 func _process(delta: float) -> void:
 	_time_label.text = "%s · %s\n%s %d · %s" % [GameState.get_time_string(), tr("PHASE_" + GameState.get_phase()), tr("DAY"), GameState.day, tr("W_" + GameState.weather)]
-	var want := _fireflies != null and _fireflies.nearest != null and not get_tree().paused
+	var want: bool = false
+	if _fireflies != null and not get_tree().paused:
+		want = _fireflies.nearest != null
 	_hint.modulate.a = move_toward(_hint.modulate.a, 1.0 if want else 0.0, delta * 5.0)
 
 func _refresh_jar() -> void:

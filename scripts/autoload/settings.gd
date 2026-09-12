@@ -27,6 +27,8 @@ var _custom_events := {}
 
 func _ready() -> void:
 	for a in ACTIONS:
+		if not InputMap.has_action(a):
+			InputMap.add_action(a)
 		_default_events[a] = InputMap.action_get_events(a).duplicate()
 	_load()
 	_install_translations()
@@ -47,8 +49,8 @@ func _load() -> void:
 	time_speed = cfg.get_value("game", "time_speed", time_speed)
 	language = cfg.get_value("game", "language", language)
 	for a in ACTIONS:
-		var code: int = cfg.get_value("controls", a, -1)
-		if code >= 0:
+		var code: int = int(cfg.get_value("controls", a, -1))
+		if code > 0:
 			_custom_events[a] = code
 
 func save() -> void:
@@ -80,7 +82,8 @@ func apply_graphics() -> void:
 	if fullscreen:
 		win.mode = Window.MODE_FULLSCREEN
 	else:
-		if win.mode == Window.MODE_FULLSCREEN:
+		var was_fullscreen := win.mode == Window.MODE_FULLSCREEN or win.mode == Window.MODE_EXCLUSIVE_FULLSCREEN
+		if was_fullscreen:
 			win.mode = Window.MODE_WINDOWED
 		var res: Vector2i = RESOLUTIONS[clampi(resolution_index, 0, RESOLUTIONS.size() - 1)]
 		if win.size != res:
@@ -113,6 +116,8 @@ func apply_controls() -> void:
 				InputMap.action_add_event(a, ev)
 
 func rebind(action: String, physical_keycode: int) -> void:
+	if not ACTIONS.has(action):
+		return
 	_custom_events[action] = physical_keycode
 	apply_controls()
 	save()
@@ -128,11 +133,15 @@ func get_action_key_name(action: String) -> String:
 	var events := InputMap.action_get_events(action)
 	if events.is_empty():
 		return "—"
-	var ev := events[0]
+	var ev: InputEvent = events[0]
 	if ev is InputEventKey:
 		var k := ev as InputEventKey
-		var code := k.physical_keycode if k.physical_keycode != 0 else k.keycode
-		return OS.get_keycode_string(DisplayServer.keyboard_get_keycode_from_physical(code))
+		var code: int = k.physical_keycode if k.physical_keycode != 0 else k.keycode
+		var label: int = code
+		if k.physical_keycode != 0:
+			label = DisplayServer.keyboard_get_keycode_from_physical(k.physical_keycode)
+		var s := OS.get_keycode_string(label as Key)
+		return s if s != "" else OS.get_keycode_string(code as Key)
 	return ev.as_text()
 
 func get_time_scale() -> float:

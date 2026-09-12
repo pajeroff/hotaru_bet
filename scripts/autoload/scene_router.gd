@@ -28,7 +28,9 @@ func go_to(path: String, duration := 0.6) -> void:
 	tw.tween_property(_fade, "color:a", 1.0, duration).set_trans(Tween.TRANS_SINE)
 	await tw.finished
 	get_tree().paused = false
-	get_tree().change_scene_to_file(path)
+	var err := get_tree().change_scene_to_file(path)
+	if err != OK:
+		push_error("Не удалось загрузить сцену: %s (код %d)" % [path, err])
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var tw2 := create_tween()

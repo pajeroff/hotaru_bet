@@ -55,6 +55,8 @@ func _ready() -> void:
 
 	var b_menu := UITheme.button(tr("TO_MENU"))
 	b_menu.pressed.connect(func():
+		var midx := AudioServer.get_bus_index("Master")
+		AudioServer.set_bus_volume_db(midx, linear_to_db(maxf(Settings.master_volume, 0.0001)))
 		SaveManager.autosave()
 		AudioManager.set_ambient("wind", 0.25)
 		SceneRouter.go_to(SceneRouter.MAIN_MENU, 0.8)
@@ -69,7 +71,7 @@ func _ready() -> void:
 	tw.tween_method(func(v): AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(Settings.master_volume * v, 0.0001))), 1.0, 0.35, 0.4)
 
 func _open_settings() -> void:
-	var s = load("res://scenes/ui/settings_screen.tscn").instantiate()
+	var s = preload("res://scripts/ui/settings_screen.gd").new()
 	s.embedded = true
 	_root.visible = false
 	s.closed.connect(func(): _root.visible = true)

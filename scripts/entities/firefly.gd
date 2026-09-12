@@ -65,6 +65,9 @@ func _process(delta: float) -> void:
 	_wander_timer -= delta
 	if _wander_timer <= 0.0:
 		_new_wander()
+	if _state == "caught":
+		queue_redraw()
+		return
 	var desired := _wander
 	if _player != null and _state == "free":
 		var ppos: Vector2 = _player.global_position

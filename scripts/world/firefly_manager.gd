@@ -71,7 +71,7 @@ func spawn_one() -> void:
 	_flies.append(f)
 
 func try_catch() -> bool:
-	if nearest == null:
+	if nearest == null or not is_instance_valid(nearest):
 		return false
 	var f = nearest
 	if f.try_catch():
