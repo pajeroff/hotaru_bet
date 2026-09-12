@@ -27,42 +27,26 @@ func _process(delta: float) -> void:
 		f["pos"] = p
 	queue_redraw()
 
+const BG := preload("res://assets/textures/menu_bg.jpg")
+
 func _draw() -> void:
 	var sz := size
-	# Небо — вертикальный градиент
-	var steps := 24
-	for i in range(steps):
-		var a := float(i) / steps
-		var c := Color(0.95, 0.80, 0.78).lerp(Color(0.78, 0.80, 0.92), a)
-		draw_rect(Rect2(0, sz.y * a, sz.x, sz.y / steps + 1), c)
-	# Солнце
-	draw_circle(Vector2(sz.x * 0.72, sz.y * 0.30), 90, Color(1.0, 0.93, 0.78, 0.55))
-	draw_circle(Vector2(sz.x * 0.72, sz.y * 0.30), 60, Color(1.0, 0.96, 0.85, 0.8))
-	# Дальние холмы
-	_hill(sz, 0.62, Color(0.72, 0.76, 0.86, 0.9), 0.0)
-	_hill(sz, 0.70, Color(0.62, 0.70, 0.78, 0.95), 2.0)
-	_hill(sz, 0.80, Color(0.55, 0.66, 0.66, 1.0), 4.0)
-	# Туман
-	for i in range(6):
-		var y := sz.y * (0.55 + i * 0.07) + sin(_t * 0.2 + i) * 8.0
-		draw_rect(Rect2(0, y, sz.x, sz.y * 0.09), Color(1, 1, 1, 0.10))
-	# Светлячки
+	# ключевой арт, cover-масштаб с медленным дрейфом (параллакс)
+	var ts := Vector2(BG.get_size())
+	var sc := maxf(sz.x / ts.x, sz.y / ts.y) * 1.06
+	var dsz := ts * sc
+	var drift := Vector2(sin(_t * 0.05), cos(_t * 0.04)) * 12.0
+	draw_texture_rect(BG, Rect2((sz - dsz) * 0.5 + drift, dsz), false)
+	# тёплая вуаль + туман
+	for i in range(5):
+		var y := sz.y * (0.6 + i * 0.08) + sin(_t * 0.2 + i) * 8.0
+		draw_rect(Rect2(0, y, sz.x, sz.y * 0.1), Color(1, 1, 1, 0.05))
 	for f in _flies:
 		var p: Vector2 = f["pos"] * sz
 		var fs: float = f["seed"]
 		var pulse := 0.6 + 0.4 * sin(_t * 2.0 + fs)
 		var c: Color = f["color"]
 		var fsz: float = f["size"]
-		draw_circle(p, fsz * 3.5, Color(c.r, c.g, c.b, 0.12 * pulse))
-		draw_circle(p, fsz, Color(c.r, c.g, c.b, 0.85 * pulse))
+		draw_circle(p, fsz * 4.0, Color(c.r, c.g, c.b, 0.10 * pulse))
+		draw_circle(p, fsz, Color(c.r, c.g, c.b, 0.9 * pulse))
 
-func _hill(sz: Vector2, base: float, color: Color, offset: float) -> void:
-	var pts := PackedVector2Array()
-	var n := 40
-	for i in range(n + 1):
-		var x := sz.x * i / n
-		var y := sz.y * base + sin(i * 0.5 + offset) * 22.0 + cos(i * 0.21 + offset) * 30.0
-		pts.append(Vector2(x, y))
-	pts.append(Vector2(sz.x, sz.y))
-	pts.append(Vector2(0, sz.y))
-	draw_colored_polygon(pts, color)

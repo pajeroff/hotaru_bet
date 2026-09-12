@@ -1,54 +1,130 @@
 extends CharacterBody2D
-## Хранитель. Ходит в 8 направлениях, ловит светлячков, включает фонарь.
+## Хранитель: спрайтовые анимации ходьбы в 4 направлениях (8 направлений движения),
+## мягкая тень, фонарь с тенями, пыль из-под ног.
 
 signal moved(pos: Vector2)
 signal idle_time_changed(t: float)
 
 const SPEED := 150.0
 const ACCEL := 9.0
+const SHEET := preload("res://assets/sprites/player_sheet.png")
+const TEX_LIGHT := preload("res://assets/textures/light_soft.png")
+const TEX_SHADOW := preload("res://assets/textures/shadow_blob.png")
+const TEX_GLOW := preload("res://assets/textures/particle_glow.png")
+const FW := 96
+const FH := 128
 
 var facing := Vector2.DOWN
-var _anim_t := 0.0
+var _row := 0 # 0 down, 1 left, 2 right, 3 up
 var _walking := false
 var _step_timer := 0.0
 var _idle_t := 0.0
 var _lantern: PointLight2D
-var _catch_flash := 0.0
+var _lantern_glow: Sprite2D
+var _sprite: AnimatedSprite2D
+var _shadow: Sprite2D
+var _dust: GPUParticles2D
+var _flash: Sprite2D
 var input_enabled := true
-var _bob := 0.0
 
 func _ready() -> void:
 	var cs := CollisionShape2D.new()
 	var c := CircleShape2D.new()
 	c.radius = 9
 	cs.shape = c
-	cs.position = Vector2(0, 4)
+	cs.position = Vector2(0, -2)
 	add_child(cs)
+
+	_shadow = Sprite2D.new()
+	_shadow.texture = TEX_SHADOW
+	_shadow.scale = Vector2(0.42, 0.16)
+	_shadow.position = Vector2(2, 2)
+	_shadow.modulate = Color(0, 0, 0, 0.38)
+	add_child(_shadow)
+
+	_sprite = AnimatedSprite2D.new()
+	_sprite.sprite_frames = _build_frames()
+	_sprite.offset = Vector2(0, -FH * 0.5 + 8)
+	_sprite.scale = Vector2(0.7, 0.7)
+	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	_sprite.animation = "idle_down"
+	_sprite.play()
+	add_child(_sprite)
+
 	_lantern = PointLight2D.new()
-	_lantern.texture = _tex()
-	_lantern.color = Color(1.0, 0.9, 0.7)
-	_lantern.texture_scale = 2.4
+	_lantern.texture = TEX_LIGHT
+	_lantern.color = Color(1.0, 0.88, 0.65)
+	_lantern.texture_scale = 2.6
 	_lantern.energy = 0.0
-	_lantern.position = Vector2(0, -6)
+	_lantern.position = Vector2(0, -20)
+	_lantern.shadow_enabled = true
+	_lantern.shadow_filter = PointLight2D.SHADOW_FILTER_PCF13
+	_lantern.shadow_filter_smooth = 4.0
+	_lantern.shadow_color = Color(0.1, 0.08, 0.2, 0.5)
 	add_child(_lantern)
+
+	_lantern_glow = Sprite2D.new()
+	_lantern_glow.texture = TEX_GLOW
+	_lantern_glow.scale = Vector2(1.2, 1.2)
+	_lantern_glow.modulate = Color(1.0, 0.85, 0.5, 0.0)
+	_lantern_glow.position = Vector2(12, -18)
+	add_child(_lantern_glow)
+
+	_dust = GPUParticles2D.new()
+	_dust.amount = 12
+	_dust.lifetime = 0.7
+	_dust.emitting = false
+	_dust.texture = TEX_GLOW
+	_dust.position = Vector2(0, 2)
+	var pm := ParticleProcessMaterial.new()
+	pm.direction = Vector3(0, -1, 0)
+	pm.spread = 60.0
+	pm.initial_velocity_min = 6.0
+	pm.initial_velocity_max = 16.0
+	pm.gravity = Vector3(0, 10, 0)
+	pm.scale_min = 0.1
+	pm.scale_max = 0.22
+	pm.color = Color(0.8, 0.75, 0.6, 0.35)
+	_dust.process_material = pm
+	add_child(_dust)
+
+	_flash = Sprite2D.new()
+	_flash.texture = TEX_LIGHT
+	_flash.modulate = Color(1, 0.95, 0.75, 0.0)
+	_flash.position = Vector2(0, -24)
+	_flash.scale = Vector2(0.6, 0.6)
+	add_child(_flash)
+
 	global_position = GameState.player_position
 	set_lantern(GameState.lantern_on, true)
 
-func _tex() -> ImageTexture:
-	var size := 128
-	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	var c := size / 2.0
-	for y in range(size):
-		for x in range(size):
-			var d := Vector2(x - c, y - c).length() / c
-			var a := clampf(1.0 - d, 0.0, 1.0)
-			img.set_pixel(x, y, Color(1, 1, 1, a * a))
-	return ImageTexture.create_from_image(img)
+func _build_frames() -> SpriteFrames:
+	var sf := SpriteFrames.new()
+	sf.remove_animation("default")
+	var names := ["down", "left", "right", "up"]
+	for r in range(4):
+		var walk := "walk_" + names[r]
+		var idle := "idle_" + names[r]
+		sf.add_animation(walk)
+		sf.set_animation_speed(walk, 8.0)
+		sf.set_animation_loop(walk, true)
+		sf.add_animation(idle)
+		sf.set_animation_speed(idle, 1.0)
+		for c in range(4):
+			var at := AtlasTexture.new()
+			at.atlas = SHEET
+			at.region = Rect2(c * FW, r * FH, FW, FH)
+			sf.add_frame(walk, at)
+			if c == 0:
+				sf.add_frame(idle, at)
+	return sf
 
 func set_lantern(on: bool, instant := false) -> void:
 	GameState.lantern_on = on
-	var tw := create_tween()
-	tw.tween_property(_lantern, "energy", 1.1 if on else 0.0, 0.01 if instant else 0.5).set_trans(Tween.TRANS_SINE)
+	var tw := create_tween().set_parallel(true)
+	var d := 0.01 if instant else 0.5
+	tw.tween_property(_lantern, "energy", 1.2 if on else 0.0, d).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_lantern_glow, "modulate:a", 0.8 if on else 0.0, d)
 	if not instant:
 		AudioManager.play_sfx("lantern", -6.0, 1.3 if on else 0.9)
 
@@ -56,28 +132,41 @@ func _physics_process(delta: float) -> void:
 	var dir := Vector2.ZERO
 	if input_enabled:
 		dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var target := dir * SPEED
-	velocity = velocity.lerp(target, 1.0 - exp(-ACCEL * delta))
+	velocity = velocity.lerp(dir * SPEED, 1.0 - exp(-ACCEL * delta))
 	move_and_slide()
 	_walking = velocity.length() > 15.0
 	if dir.length() > 0.1:
 		facing = dir.normalized()
+		if absf(facing.x) > absf(facing.y):
+			_row = 1 if facing.x < 0 else 2
+		else:
+			_row = 3 if facing.y < 0 else 0
+	var names := ["down", "left", "right", "up"]
+	var anim := ("walk_" if _walking else "idle_") + names[_row]
+	if _sprite.animation != anim:
+		_sprite.play(anim)
+	_sprite.speed_scale = clampf(velocity.length() / SPEED, 0.6, 1.2) if _walking else 1.0
+	# лёгкое "дыхание" стоя
+	if not _walking:
+		_sprite.scale.y = 0.7 + sin(Time.get_ticks_msec() * 0.002) * 0.005
+	else:
+		_sprite.scale.y = 0.7
+	_dust.emitting = _walking
 	if _walking:
-		_anim_t += delta * 8.0 * (velocity.length() / SPEED)
 		_idle_t = 0.0
 		_step_timer -= delta
 		if _step_timer <= 0.0:
 			_step_timer = 0.34
 			AudioManager.play_sfx("step", -14.0, randf_range(0.85, 1.15))
 	else:
-		_anim_t = lerpf(_anim_t, roundf(_anim_t / PI) * PI, delta * 10.0)
 		_idle_t += delta
-	_bob = sin(_anim_t) * (2.5 if _walking else 0.0)
-	_catch_flash = maxf(_catch_flash - delta * 2.0, 0.0)
+	_lantern_glow.position.x = 12 if _row != 1 else -12
+	_lantern_glow.modulate.a = lerpf(_lantern_glow.modulate.a, (0.75 + 0.15 * sin(Time.get_ticks_msec() * 0.006)) if GameState.lantern_on else 0.0, delta * 6.0)
+	_flash.modulate.a = maxf(_flash.modulate.a - delta * 2.0, 0.0)
+	_flash.scale = _flash.scale.lerp(Vector2(0.6, 0.6), delta * 4.0)
 	GameState.player_position = global_position
 	moved.emit(global_position)
 	idle_time_changed.emit(_idle_t)
-	queue_redraw()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not input_enabled:
@@ -86,50 +175,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		set_lantern(not GameState.lantern_on)
 
 func flash() -> void:
-	_catch_flash = 1.0
+	_flash.modulate.a = 0.8
+	_flash.scale = Vector2(1.4, 1.4)
 
 func get_idle_time() -> float:
 	return _idle_t
-
-func _draw() -> void:
-	var bob := absf(_bob)
-	var y := -bob
-	# тень
-	draw_set_transform(Vector2(0, 12), 0, Vector2(1, 0.4))
-	draw_circle(Vector2.ZERO, 11, Color(0.1, 0.15, 0.1, 0.25))
-	draw_set_transform(Vector2.ZERO)
-	# ноги
-	var leg_swing := sin(_anim_t) * 4.0 if _walking else 0.0
-	var side := 1.0 if facing.x >= 0 else -1.0
-	draw_rect(Rect2(-6 + leg_swing * 0.5, 4 + y, 5, 9), Color(0.55, 0.45, 0.40))
-	draw_rect(Rect2(1 - leg_swing * 0.5, 4 + y, 5, 9), Color(0.55, 0.45, 0.40))
-	# тело (тёплая туника)
-	draw_rect(Rect2(-9, -12 + y, 18, 18), Color(0.96, 0.87, 0.72))
-	draw_rect(Rect2(-9, -12 + y, 18, 4), Color(0.90, 0.72, 0.62))
-	draw_line(Vector2(0, -8 + y), Vector2(0, 4 + y), Color(0.90, 0.72, 0.62), 1.5)
-	# руки
-	var arm_swing := cos(_anim_t) * 3.0 if _walking else 0.0
-	draw_rect(Rect2(-12, -9 + y + arm_swing * 0.5, 4, 10), Color(0.98, 0.88, 0.78))
-	draw_rect(Rect2(8, -9 + y - arm_swing * 0.5, 4, 10), Color(0.98, 0.88, 0.78))
-	# голова
-	draw_circle(Vector2(0, -20 + y), 9, Color(0.99, 0.90, 0.80))
-	# волосы
-	draw_circle(Vector2(0, -23 + y), 9, Color(0.62, 0.48, 0.40))
-	draw_rect(Rect2(-9, -23 + y, 18, 5), Color(0.62, 0.48, 0.40))
-	# лицо — зависит от направления
-	if facing.y > -0.5:
-		var ex := facing.x * 2.0
-		var ey := -19 + y + facing.y * 1.0
-		draw_circle(Vector2(-3 + ex, ey), 1.3, Color(0.3, 0.25, 0.3))
-		draw_circle(Vector2(3 + ex, ey), 1.3, Color(0.3, 0.25, 0.3))
-		draw_circle(Vector2(-5 + ex, ey + 3), 1.8, Color(1.0, 0.75, 0.75, 0.6))
-		draw_circle(Vector2(5 + ex, ey + 3), 1.8, Color(1.0, 0.75, 0.75, 0.6))
-	# фонарь в руке
-	if GameState.lantern_on:
-		var lp := Vector2(12 * side, -2 + y)
-		draw_line(Vector2(10 * side, -6 + y), lp, Color(0.5, 0.42, 0.36), 1.5)
-		draw_circle(lp + Vector2(0, 5), 8, Color(1.0, 0.85, 0.5, 0.25))
-		draw_rect(Rect2(lp.x - 3, lp.y, 6, 8), Color(1.0, 0.85, 0.55))
-	# вспышка при ловле
-	if _catch_flash > 0.0:
-		draw_circle(Vector2(0, -10 + y), 30 * (1.0 - _catch_flash) + 10, Color(1.0, 0.95, 0.75, _catch_flash * 0.5))

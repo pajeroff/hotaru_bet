@@ -35,18 +35,16 @@ func _ready() -> void:
 	add_child(_pond_reflection)
 
 	var temple = TempleScript.new()
-	temple.position = Vector2(0, -20)
-	temple.z_index = 2
-	add_child(temple)
+	temple.position = Vector2(0, 30)
+	glade.props_root.add_child(temple)
 
 	player = PlayerScript.new()
-	player.z_index = 3
-	add_child(player)
+	glade.props_root.add_child(player)
 	player.moved.connect(func(p): glade.player_pos = p)
 
 	fireflies = FirefliesScript.new()
 	fireflies.player = player
-	fireflies.z_index = 4
+	fireflies.z_index = 6
 	add_child(fireflies)
 	_pond_reflection.fireflies = fireflies
 

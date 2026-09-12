@@ -26,6 +26,7 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/size/mode=3
 window/stretch/mode="canvas_items"
+window/stretch/scale_mode="fractional"
 window/stretch/aspect="expand"
 
 [input]
@@ -82,6 +83,10 @@ locale/fallback="ru"
 [rendering]
 
 renderer/rendering_method="forward_plus"
+textures/canvas_textures/default_texture_filter=3
+2d/shadow_atlas/size=4096
+anti_aliasing/quality/msaa_2d=2
+lights_and_shadows/positional_shadow/soft_shadow_filter_quality=3
 environment/defaults/default_clear_color=Color(0.85, 0.82, 0.9, 1)
 
 [audio]

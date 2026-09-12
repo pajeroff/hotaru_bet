@@ -18,7 +18,7 @@ var day := 1
 var time_of_day := 7.0 # часы 0..24
 var weather := "clear"
 var season := "spring"
-var player_position := Vector2(0, 80)
+var player_position := Vector2(0, 160)
 var jar: Array = [] # массив словарей светлячков
 var total_caught := 0
 var temple_level := 0 # 0 тусклый, 1 тлеющий, 2 яркий
@@ -35,7 +35,7 @@ func reset_new_game() -> void:
 	time_of_day = 7.0
 	weather = "clear"
 	season = "spring"
-	player_position = Vector2(0, 80)
+	player_position = Vector2(0, 160)
 	jar.clear()
 	total_caught = 0
 	temple_level = 0
@@ -62,7 +62,7 @@ func from_dict(d: Dictionary) -> void:
 	time_of_day = float(d.get("time_of_day", 7.0))
 	weather = str(d.get("weather", "clear"))
 	season = str(d.get("season", "spring"))
-	player_position = Vector2(float(d.get("player_x", 0)), float(d.get("player_y", 80)))
+	player_position = Vector2(float(d.get("player_x", 0)), float(d.get("player_y", 160)))
 	jar = d.get("jar", []).duplicate(true)
 	total_caught = int(d.get("total_caught", 0))
 	temple_level = int(d.get("temple_level", 0))

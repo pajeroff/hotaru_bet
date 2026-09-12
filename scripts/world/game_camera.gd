@@ -7,7 +7,7 @@ var _t := 0.0
 func _ready() -> void:
 	position_smoothing_enabled = true
 	position_smoothing_speed = 4.0
-	zoom = Vector2(1.6, 1.6)
+	zoom = Vector2(1.45, 1.45)
 	limit_left = -1000
 	limit_right = 1000
 	limit_top = -700
