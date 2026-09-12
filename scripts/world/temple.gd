@@ -70,7 +70,8 @@ func _draw() -> void:
 	# фонарики и камешки вокруг
 	for l in _lanterns:
 		var p: Vector2 = l["pos"]
-		var fl := 0.7 + 0.3 * sin(_t * 3.0 + l["seed"] * 4.0)
+		var ls: float = l["seed"]
+		var fl := 0.7 + 0.3 * sin(_t * 3.0 + ls * 4.0)
 		draw_rect(Rect2(p.x - 2, p.y - 20, 4, 20), Color(0.5, 0.42, 0.36))
 		draw_circle(p + Vector2(0, -24), 10 * fl + 6, Color(1.0, 0.8, 0.5, 0.18 * fl))
 		draw_rect(Rect2(p.x - 6, p.y - 30, 12, 12), Color(0.95, 0.75, 0.45, 0.9))

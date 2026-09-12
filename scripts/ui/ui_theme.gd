@@ -77,15 +77,11 @@ static func _panel_style(color: Color) -> StyleBoxFlat:
 	s.shadow_size = 18
 	return s
 
-static func _audio() -> Node:
-	return (Engine.get_main_loop() as SceneTree).root.get_node_or_null("AudioManager")
-
 ## Подключает мягкий звук и лёгкое увеличение при наведении.
 static func decorate_button(b: Button) -> void:
 	b.pivot_offset = b.size / 2.0
 	b.mouse_entered.connect(func():
-		var am := _audio()
-		if am: am.play_sfx("hover", -8.0)
+		AudioManager.play_sfx("hover", -8.0)
 		b.pivot_offset = b.size / 2.0
 		var tw := b.create_tween()
 		tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
@@ -96,10 +92,7 @@ static func decorate_button(b: Button) -> void:
 		tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		tw.tween_property(b, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_SINE)
 	)
-	b.pressed.connect(func():
-		var am := _audio()
-		if am: am.play_sfx("click", -6.0)
-	)
+	b.pressed.connect(func(): AudioManager.play_sfx("click", -6.0))
 
 static func button(text_key: String, min_w := 260) -> Button:
 	var b := Button.new()

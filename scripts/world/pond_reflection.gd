@@ -26,6 +26,7 @@ func _draw() -> void:
 		if d.length() < 1.0:
 			var wob := sin(_t * 3.0 + p.x * 0.05) * 2.0
 			var c: Color = f.color
-			var a := (1.0 - d.length()) * 0.45 * f._visible_scale
+			var vs: float = f._visible_scale
+			var a := (1.0 - d.length()) * 0.45 * vs
 			draw_circle(rp + Vector2(wob, 0), 6, Color(c.r, c.g, c.b, a * 0.3))
 			draw_circle(rp + Vector2(wob, 0), 2.5, Color(c.r, c.g, c.b, a))

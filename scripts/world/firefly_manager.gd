@@ -96,7 +96,8 @@ func _on_released(data: Dictionary) -> void:
 
 func _draw() -> void:
 	for s in _sparks:
-		var a := clampf(s["t"] / 6.0, 0.0, 1.0)
+		var st: float = s["t"]
+		var a := clampf(st / 6.0, 0.0, 1.0)
 		var c: Color = s["color"]
 		draw_circle(s["pos"], 6.0 + (1.0 - a) * 4.0, Color(c.r, c.g, c.b, 0.15 * a))
 		draw_circle(s["pos"], 2.0, Color(c.r, c.g, c.b, 0.8 * a))

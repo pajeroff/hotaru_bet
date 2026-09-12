@@ -58,8 +58,12 @@ func _light_for_time(t: float) -> Color:
 	]
 	for i in range(keys.size() - 1):
 		if t >= keys[i][0] and t <= keys[i + 1][0]:
-			var f := (t - keys[i][0]) / (keys[i + 1][0] - keys[i][0])
-			return keys[i][1].lerp(keys[i + 1][1], smoothstep(0.0, 1.0, f))
+			var k0: float = keys[i][0]
+			var k1: float = keys[i + 1][0]
+			var c0: Color = keys[i][1]
+			var c1: Color = keys[i + 1][1]
+			var f := (t - k0) / (k1 - k0)
+			return c0.lerp(c1, smoothstep(0.0, 1.0, f))
 	return keys[0][1]
 
 func _on_weather(w: String) -> void:
@@ -156,19 +160,21 @@ func _process(delta: float) -> void:
 		_leaves.append({"pos": Vector2(-0.05, randf_range(0.1, 0.8)), "seed": randf() * 10.0, "t": 0.0, "petal": randf() < 0.4 or w == "bloom"})
 	for l in _leaves:
 		l["t"] += delta
-		l["pos"] += Vector2(0.06, 0.02 + sin(l["t"] * 2.0 + l["seed"]) * 0.03) * delta
+		var lt: float = l["t"]
+		var lsd: float = l["seed"]
+		l["pos"] += Vector2(0.06, 0.02 + sin(lt * 2.0 + lsd) * 0.03) * delta
 	_leaves = _leaves.filter(func(l): return l["pos"].x < 1.1)
 	_overlay.queue_redraw()
 
 func _draw_overlay() -> void:
 	var sz := _overlay.size
-	var quality := [0.4, 0.75, 1.0][clampi(Settings.particle_quality, 0, 2)]
+	var quality: float = [0.4, 0.75, 1.0][clampi(Settings.particle_quality, 0, 2)]
 	var count := int(_particles.size() * quality)
 	# звёзды
 	if _star_a > 0.01:
 		for i in range(_stars.size()):
 			var s: Vector2 = _stars[i]
-			var tw := 0.5 + 0.5 * sin(_t * 1.5 + i * 0.7)
+			var tw: float = 0.5 + 0.5 * sin(_t * 1.5 + i * 0.7)
 			_overlay.draw_circle(s * sz, 1.2 + tw * 0.6, Color(1, 1, 0.95, 0.35 * _star_a * (0.4 + 0.6 * tw)))
 	# затемнение дождя
 	if _dark_a > 0.001:
@@ -204,7 +210,8 @@ func _draw_overlay() -> void:
 	# листья
 	for l in _leaves:
 		var p: Vector2 = l["pos"] * sz
-		_overlay.draw_set_transform(p, l["t"] * 3.0, Vector2(1.0, 0.5))
+		var lt: float = l["t"]
+		_overlay.draw_set_transform(p, lt * 3.0, Vector2(1.0, 0.5))
 		var c := Color(1.0, 0.78, 0.86, 0.8) if l["petal"] else Color(0.7, 0.8, 0.45, 0.8)
 		_overlay.draw_circle(Vector2.ZERO, 4.5, c)
 		_overlay.draw_set_transform(Vector2.ZERO)
@@ -214,7 +221,8 @@ func _draw_overlay() -> void:
 	# эхо другого игрока
 	if not _echo.is_empty():
 		var p: Vector2 = _echo["pos"] * sz
-		var a := clampf(minf(_echo["t"], 3.0 - _echo["t"]) , 0.0, 1.0) * 0.35
+		var et: float = _echo["t"]
+		var a := clampf(minf(et, 3.0 - et), 0.0, 1.0) * 0.35
 		_overlay.draw_circle(p + Vector2(0, -20), 9, Color(0.8, 0.85, 1.0, a))
 		_overlay.draw_rect(Rect2(p.x - 9, p.y - 12, 18, 18), Color(0.8, 0.85, 1.0, a))
 		_overlay.draw_circle(p, 14, Color(0.8, 0.85, 1.0, a * 0.3))

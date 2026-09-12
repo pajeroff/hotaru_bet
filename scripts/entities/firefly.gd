@@ -67,7 +67,8 @@ func _process(delta: float) -> void:
 		_new_wander()
 	var desired := _wander
 	if _player != null and _state == "free":
-		var to_p := _player.global_position - global_position
+		var ppos: Vector2 = _player.global_position
+		var to_p := ppos - global_position
 		var d := to_p.length()
 		var pspeed: float = _player.velocity.length()
 		var idle: float = _player.get_idle_time()
@@ -120,13 +121,15 @@ func try_catch() -> bool:
 	if emotion == "shy" and randf() < 0.25:
 		_state = "fleeing"
 		_flee_timer = 1.4
-		_vel = (global_position - _player.global_position).normalized() * 220.0
+		var ppos: Vector2 = _player.global_position
+		_vel = (global_position - ppos).normalized() * 220.0
 		fled.emit(self)
 		return false
 	_state = "caught"
 	caught.emit(self)
 	var tw := create_tween()
-	tw.tween_property(self, "global_position", _player.global_position + Vector2(0, -14), 0.35).set_trans(Tween.TRANS_SINE)
+	var ppos2: Vector2 = _player.global_position
+	tw.tween_property(self, "global_position", ppos2 + Vector2(0, -14), 0.35).set_trans(Tween.TRANS_SINE)
 	tw.tween_callback(queue_free)
 	return true
 

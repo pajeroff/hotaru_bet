@@ -49,10 +49,12 @@ func _draw() -> void:
 	# Светлячки
 	for f in _flies:
 		var p: Vector2 = f["pos"] * sz
-		var pulse := 0.6 + 0.4 * sin(_t * 2.0 + f["seed"])
+		var fs: float = f["seed"]
+		var pulse := 0.6 + 0.4 * sin(_t * 2.0 + fs)
 		var c: Color = f["color"]
-		draw_circle(p, f["size"] * 3.5, Color(c.r, c.g, c.b, 0.12 * pulse))
-		draw_circle(p, f["size"], Color(c.r, c.g, c.b, 0.85 * pulse))
+		var fsz: float = f["size"]
+		draw_circle(p, fsz * 3.5, Color(c.r, c.g, c.b, 0.12 * pulse))
+		draw_circle(p, fsz, Color(c.r, c.g, c.b, 0.85 * pulse))
 
 func _hill(sz: Vector2, base: float, color: Color, offset: float) -> void:
 	var pts := PackedVector2Array()

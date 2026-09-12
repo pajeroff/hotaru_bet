@@ -150,14 +150,16 @@ func _draw() -> void:
 	# трава (пучки)
 	for g in _grass_tufts:
 		var p: Vector2 = g["pos"]
-		var d := p.distance_to(player_pos)
-		var bend := wind * 2.5 + sin(_t * 1.5 + g["seed"]) * 1.5
+		var d: float = p.distance_to(player_pos)
+		var gs: float = g["seed"]
+		var bend := wind * 2.5 + sin(_t * 1.5 + gs) * 1.5
 		if d < 40.0:
 			var push := (p - player_pos).normalized().x * (40.0 - d) * 0.25
 			g["phase"] = lerpf(g["phase"], push, 0.2)
 		else:
 			g["phase"] = lerpf(g["phase"], 0.0, 0.05)
-		bend += g["phase"]
+		var gp: float = g["phase"]
+		bend += gp
 		var h: float = g["h"]
 		var col := Color(0.38, 0.62, 0.36, 0.9)
 		draw_line(p, p + Vector2(bend - 3, -h), col, 1.5)
@@ -178,10 +180,12 @@ func _draw() -> void:
 	for t in _trees:
 		var p: Vector2 = t["pos"]
 		var r: float = t["r"]
-		var sway := sin(_t * 0.8 + t["seed"]) * 2.0
+		var ts: float = t["seed"]
+		var sway := sin(_t * 0.8 + ts) * 2.0
 		draw_circle(p + Vector2(4, 10), r * 1.1, Color(0.15, 0.25, 0.18, 0.28))
 		draw_rect(Rect2(p.x - 6, p.y - 8, 12, 24), Color(0.45, 0.35, 0.28))
-		var base := Color(0.30, 0.48, 0.34) - Color(t["shade"], t["shade"], t["shade"], 0)
+		var sh: float = t["shade"]
+		var base := Color(0.30, 0.48, 0.34) - Color(sh, sh, sh, 0)
 		draw_circle(p + Vector2(sway, -r * 0.5), r, base)
 		draw_circle(p + Vector2(sway - r * 0.45, -r * 0.3), r * 0.7, base.lightened(0.08))
 		draw_circle(p + Vector2(sway + r * 0.4, -r * 0.35), r * 0.65, base.lightened(0.12))
