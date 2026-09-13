@@ -17,7 +17,7 @@ func _ready() -> void:
 	var gt := GradientTexture2D.new()
 	var g := Gradient.new()
 	g.set_color(0, Color(0.05, 0.03, 0.08, 0.0))
-	g.set_color(1, Color(0.05, 0.03, 0.08, 0.55))
+	g.set_color(1, Color(0.15, 0.08, 0.15, 0.30))
 	gt.gradient = g
 	gt.fill_from = Vector2(0, 0.3)
 	gt.fill_to = Vector2(0, 1)
@@ -28,17 +28,17 @@ func _ready() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 90)
-	margin.add_theme_constant_override("margin_top", 60)
-	margin.add_theme_constant_override("margin_bottom", 60)
+	margin.add_theme_constant_override("margin_top", 40)
+	margin.add_theme_constant_override("margin_bottom", 40)
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(margin)
 	var col := VBoxContainer.new()
-	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.alignment = BoxContainer.ALIGNMENT_BEGIN
 	col.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_theme_constant_override("separation", 10)
 	margin.add_child(col)
 
-	var t := UITheme.title("Хотару", 92, UITheme.TEXT_LIGHT)
+	var t := UITheme.title("Хотару", 84, UITheme.TEXT_LIGHT)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	t.add_theme_color_override("font_shadow_color", Color(0.2, 0.1, 0.05, 0.7))
 	t.add_theme_constant_override("shadow_offset_y", 4)
@@ -49,34 +49,34 @@ func _ready() -> void:
 	sub.add_theme_constant_override("shadow_outline_size", 4)
 	col.add_child(sub)
 	var sp := Control.new()
-	sp.custom_minimum_size = Vector2(0, 28)
+	sp.custom_minimum_size = Vector2(0, 14)
 	col.add_child(sp)
 
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(panel)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 6)
+	v.add_theme_constant_override("separation", 4)
 	panel.add_child(v)
 
 	var last := SaveManager.get_last_slot()
-	var b_continue := UITheme.button(tr("MENU_CONTINUE"), 320)
+	var b_continue := UITheme.button(tr("MENU_CONTINUE"), 300)
 	b_continue.disabled = last == ""
 	if last != "":
 		var meta: Dictionary = SaveManager.read_save(last).get("meta", {})
 		b_continue.tooltip_text = "%s — %s %d" % [str(meta.get("name", "")), tr("DAY"), int(meta.get("day", 1))]
 	b_continue.pressed.connect(func(): SceneRouter.load_game(last))
 	v.add_child(b_continue)
-	var b_new := UITheme.button(tr("MENU_NEW"), 320)
+	var b_new := UITheme.button(tr("MENU_NEW"), 300)
 	b_new.pressed.connect(func(): SceneRouter.start_new_game())
 	v.add_child(b_new)
-	var b_load := UITheme.button(tr("MENU_LOAD"), 320)
+	var b_load := UITheme.button(tr("MENU_LOAD"), 300)
 	b_load.pressed.connect(func(): SceneRouter.go_to(SceneRouter.LOAD_SCREEN, 0.4))
 	v.add_child(b_load)
-	var b_settings := UITheme.button(tr("MENU_SETTINGS"), 320)
+	var b_settings := UITheme.button(tr("MENU_SETTINGS"), 300)
 	b_settings.pressed.connect(func(): SceneRouter.open_settings(SceneRouter.MAIN_MENU))
 	v.add_child(b_settings)
-	var b_quit := UITheme.button(tr("MENU_QUIT"), 320)
+	var b_quit := UITheme.button(tr("MENU_QUIT"), 300)
 	b_quit.pressed.connect(func(): get_tree().quit())
 	v.add_child(b_quit)
 

@@ -158,8 +158,8 @@ static func _panel_tex() -> StyleBoxTexture:
 	s.texture_margin_bottom = h * 0.17
 	s.content_margin_left = w * 0.15 + 10
 	s.content_margin_right = w * 0.15 + 10
-	s.content_margin_top = h * 0.17 + 8
-	s.content_margin_bottom = h * 0.17 + 6
+	s.content_margin_top = h * 0.17 + 4
+	s.content_margin_bottom = h * 0.17 + 2
 	return s
 
 static func _paper_flat() -> StyleBoxFlat:
@@ -218,7 +218,7 @@ static func decorate_button(b: Button) -> void:
 static func button(text_key: String, min_w := 260) -> Button:
 	var b := Button.new()
 	b.text = text_key
-	b.custom_minimum_size = Vector2(min_w, 56)
+	b.custom_minimum_size = Vector2(min_w, 52)
 	b.focus_mode = Control.FOCUS_ALL
 	decorate_button(b)
 	return b
