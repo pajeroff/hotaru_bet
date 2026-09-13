@@ -18,15 +18,17 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	var root := Control.new()
 	root.theme = UITheme.make_theme()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(root)
 	root.add_child(UITheme.dim_layer())
 
 	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(center)
 	_panel = PanelContainer.new()
-	_panel.custom_minimum_size = Vector2(820, 520)
+	_panel.custom_minimum_size = Vector2(860, 560)
+	_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	center.add_child(_panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
@@ -44,12 +46,20 @@ func _ready() -> void:
 	v.add_child(h)
 	_jar_view = JarView.new()
 	_jar_view.big = true
-	_jar_view.custom_minimum_size = Vector2(230, 300)
+	_jar_view.custom_minimum_size = Vector2(220, 300)
+	_jar_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	h.add_child(_jar_view)
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override("separation", 10)
+	h.add_child(right)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(280, 220)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(0, 200)
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	h.add_child(scroll)
+	right.add_child(scroll)
 	_list = VBoxContainer.new()
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.add_theme_constant_override("separation", 8)
@@ -58,7 +68,8 @@ func _ready() -> void:
 	_info.custom_minimum_size = Vector2(260, 0)
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	h.add_child(_info)
+	_info.custom_minimum_size = Vector2(0, 96)
+	right.add_child(_info)
 
 	var btns := HBoxContainer.new()
 	btns.alignment = BoxContainer.ALIGNMENT_CENTER

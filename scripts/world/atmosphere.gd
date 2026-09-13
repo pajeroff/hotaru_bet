@@ -42,7 +42,7 @@ func _ready() -> void:
 	add_child(_petals)
 	# туман
 	_fog_rect = ColorRect.new()
-	_fog_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fog_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_fog_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_fog_mat = ShaderMaterial.new()
 	_fog_mat.shader = SH_FOG
@@ -50,13 +50,13 @@ func _ready() -> void:
 	add_child(_fog_rect)
 	# overlay для звёзд/вспышек/эха
 	_overlay = Control.new()
-	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_overlay.draw.connect(_draw_overlay)
 	add_child(_overlay)
 	# пост-обработка
 	_post_rect = ColorRect.new()
-	_post_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_post_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_post_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_post_mat = ShaderMaterial.new()
 	_post_mat.shader = SH_POST

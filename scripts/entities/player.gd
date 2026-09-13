@@ -11,8 +11,8 @@ const SHEET := preload("res://assets/sprites/player_sheet.png")
 const TEX_LIGHT := preload("res://assets/textures/light_soft.png")
 const TEX_SHADOW := preload("res://assets/textures/shadow_blob.png")
 const TEX_GLOW := preload("res://assets/textures/particle_glow.png")
-const FW := 96
-const FH := 128
+const FW := 192
+const FH := 256
 const DIR_NAMES: Array[String] = ["down", "left", "right", "up"]
 
 var facing := Vector2.DOWN
@@ -49,8 +49,8 @@ func _ready() -> void:
 
 	_sprite = AnimatedSprite2D.new()
 	_sprite.sprite_frames = _build_frames()
-	_sprite.offset = Vector2(0, -FH * 0.5 + 8)
-	_sprite.scale = Vector2(0.7, 0.7)
+	_sprite.offset = Vector2(0, -FH * 0.5 + 16)
+	_sprite.scale = Vector2(0.35, 0.35)
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_sprite.animation = "idle_down"
 	_sprite.play()
@@ -164,7 +164,8 @@ func _physics_process(delta: float) -> void:
 	_walking = velocity.length() > 15.0
 	if dir.length() > 0.1:
 		facing = dir.normalized()
-		if absf(facing.x) > absf(facing.y):
+		# по диагонали показываем боковой ряд (он читается лучше), чисто вверх/вниз — фронтальный
+		if absf(facing.x) > absf(facing.y) * 0.6:
 			_row = 1 if facing.x < 0 else 2
 		else:
 			_row = 3 if facing.y < 0 else 0
@@ -192,8 +193,12 @@ func _physics_process(delta: float) -> void:
 	var bob := absf(sin(_bob_phase)) * 2.2 * spd
 	var stretch := 1.0 + sin(_bob_phase * 2.0) * 0.025 * spd
 	_sprite.position.y = lerpf(_sprite.position.y, -bob, delta * 20.0)
-	_sprite.scale = Vector2(0.7 / stretch, 0.7 * stretch)
-	_sprite.rotation = lerpf(_sprite.rotation, velocity.x / SPEED * 0.04, delta * 6.0)
+	_sprite.scale = Vector2(0.35 / stretch, 0.35 * stretch)
+	# лёгкий наклон корпуса по направлению движения, по диагонали чуть сильнее (иллюзия 8 направлений)
+	var diag := 0.0
+	if _walking and (_row == 1 or _row == 2):
+		diag = signf(velocity.x) * velocity.y / SPEED * 0.10
+	_sprite.rotation = lerpf(_sprite.rotation, velocity.x / SPEED * 0.04 + diag, delta * 6.0)
 	_shadow.scale = Vector2(0.42, 0.16) * (1.0 - bob * 0.04)
 	_dust.emitting = _walking
 	if _walking:

@@ -2,7 +2,7 @@ extends Control
 
 func _ready() -> void:
 	theme = UITheme.make_theme()
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	GameState.running = false
 	Settings.apply_audio()
 	AudioManager.set_mood("menu")
@@ -13,7 +13,7 @@ func _ready() -> void:
 	add_child(bg)
 	# лёгкое затемнение снизу для читаемости
 	var grad := TextureRect.new()
-	grad.set_anchors_preset(Control.PRESET_FULL_RECT)
+	grad.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	grad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var gt := GradientTexture2D.new()
 	var g := Gradient.new()
@@ -27,7 +27,7 @@ func _ready() -> void:
 
 	# левая колонка с меню на бумажной панели
 	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 90)
 	margin.add_theme_constant_override("margin_top", 40)
 	margin.add_theme_constant_override("margin_bottom", 40)

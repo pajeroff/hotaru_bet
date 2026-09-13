@@ -14,6 +14,29 @@ const TEX_SHADOW := preload("res://assets/textures/shadow_blob.png")
 const SPRITE_NAMES: Array[String] = ["tree_a", "tree_b", "tree_sakura", "bush", "bush_flower", "rock", "lantern", "grass_tuft", "bench", "well", "torii", "stupa", "mushrooms", "log", "flowers", "signpost", "reeds", "tree_old", "fox_statue", "stump"]
 var SPR := {}
 const SWAY_KINDS: Array[String] = ["tree_a", "tree_b", "tree_sakura", "tree_old", "bush", "bush_flower", "grass_tuft", "flowers", "reeds", "mushrooms"]
+## Спрайты теперь в высоком разрешении; масштаб приводит их к прежнему размеру на сцене.
+const NATIVE_SCALE := {
+	"tree_a": 0.6718,
+	"tree_b": 0.6771,
+	"tree_sakura": 0.5991,
+	"bush_flower": 0.4188,
+	"bush": 0.4424,
+	"rock": 0.296,
+	"lantern": 0.2507,
+	"grass_tuft": 0.241,
+	"bench": 0.4085,
+	"well": 0.3951,
+	"torii": 0.5349,
+	"stupa": 0.347,
+	"mushrooms": 0.2527,
+	"log": 0.3799,
+	"flowers": 0.3031,
+	"signpost": 0.2712,
+	"reeds": 0.2932,
+	"tree_old": 0.963,
+	"fox_statue": 0.2477,
+	"stump": 0.2405,
+}
 const TALL_KINDS: Array[String] = ["tree_a", "tree_b", "tree_sakura", "tree_old", "torii", "well"]
 const SH_WIND := preload("res://shaders/wind_sway.gdshader")
 const SH_GROUND := preload("res://shaders/ground.gdshader")
@@ -150,16 +173,17 @@ func _add_prop(kind: String, pos: Vector2, scale_mul := 1.0, sway := true, shado
 		return spr
 	spr.texture = SPR[kind]
 	spr.position = pos
-	spr.scale = Vector2.ONE * scale_mul
+	var ns: float = float(NATIVE_SCALE.get(kind, 1.0))
+	spr.scale = Vector2.ONE * scale_mul * ns
 	spr.centered = true
 	var h := spr.texture.get_height()
-	spr.offset = Vector2(0, -h * 0.5 + 6) # "ноги" в точке pos
+	spr.offset = Vector2(0, -h * 0.5 + 6.0 / ns) # "ноги" в точке pos
 	spr.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	if shadow > 0.0 and (_quality > 0 or TALL_KINDS.has(kind)):
 		var sh := Sprite2D.new()
 		sh.texture = TEX_SHADOW
 		sh.position = pos + Vector2(6, 4)
-		var w := spr.texture.get_width() * scale_mul
+		var w := spr.texture.get_width() * scale_mul * ns
 		sh.scale = Vector2(w / 128.0 * 0.9, w / 128.0 * 0.35) * shadow
 		sh.modulate = Color(0, 0, 0, 0.35)
 		sh.z_index = 1
@@ -315,16 +339,17 @@ func _build_collision() -> void:
 		for k in SPR:
 			if SPR[k] == s.texture: tex_name = str(k)
 		var r: float = 0.0
+		var sm: float = s.scale.x / float(NATIVE_SCALE.get(tex_name, 1.0)) # пользовательский масштаб без учёта разрешения
 		match tex_name:
-			"tree_a", "tree_b", "tree_sakura": r = 18.0 * s.scale.x
-			"tree_old": r = 40.0 * s.scale.x
-			"bush", "bush_flower": r = 26.0 * s.scale.x
-			"rock": r = 22.0 * s.scale.x
+			"tree_a", "tree_b", "tree_sakura": r = 18.0 * sm
+			"tree_old": r = 40.0 * sm
+			"bush", "bush_flower": r = 26.0 * sm
+			"rock": r = 22.0 * sm
 			"lantern", "signpost", "fox_statue", "stupa": r = 10.0
-			"stump": r = 16.0 * s.scale.x
-			"log": r = 28.0 * s.scale.x
-			"well": r = 40.0 * s.scale.x
-			"bench": r = 26.0 * s.scale.x
+			"stump": r = 16.0 * sm
+			"log": r = 28.0 * sm
+			"well": r = 40.0 * sm
+			"bench": r = 26.0 * sm
 			"torii": r = 0.0
 		if r <= 0.0: continue
 		var cs := CollisionShape2D.new()

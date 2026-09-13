@@ -253,12 +253,12 @@ static func sign_title(text: String, size := 30) -> Control:
 	tr_.texture = TEX_SIGN
 	tr_.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	tr_.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	tr_.set_anchors_preset(Control.PRESET_FULL_RECT)
+	tr_.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	c.add_child(tr_)
 	var l := label(text, size, TEXT_LIGHT)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.set_anchors_preset(Control.PRESET_FULL_RECT)
+	l.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	l.offset_top = 14
 	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
 	l.add_theme_constant_override("shadow_offset_y", 2)
@@ -269,7 +269,7 @@ static func sign_title(text: String, size := 30) -> Control:
 static func dim_layer() -> ColorRect:
 	var d := ColorRect.new()
 	d.color = DIM
-	d.set_anchors_preset(Control.PRESET_FULL_RECT)
+	d.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	return d
 
 static func fade_in(node: CanvasItem, duration := 0.8) -> void:

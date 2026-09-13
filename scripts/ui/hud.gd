@@ -176,7 +176,7 @@ func _process(delta: float) -> void:
 	var h12 := h % 12
 	if h12 == 0:
 		h12 = 12
-	_time_text.text = "%d:%02d %s" % [h12, m, tr("AM") if h < 12 else tr("PM")]
+	_time_text.text = "%d:%02d %s" % [h12, m, "AM" if h < 12 else "PM"]
 	var wd := (GameState.day - 1) % 7
 	_date_text.text = "%s %d · %s · %s" % [tr("DAY"), GameState.day, tr("WEEKDAY_%d" % wd), tr("MONTH_" + GameState.season)]
 	_phase_text.text = "%s · %s" % [tr("PHASE_" + GameState.get_phase()), tr("W_" + GameState.weather)]

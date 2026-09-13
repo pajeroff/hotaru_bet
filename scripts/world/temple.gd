@@ -26,8 +26,8 @@ func _ready() -> void:
 
 	_sprite = Sprite2D.new()
 	_sprite.texture = TEX
-	_sprite.scale = Vector2(0.62, 0.62)
-	_sprite.offset = Vector2(0, -TEX.get_height() * 0.5 + 40)
+	_sprite.scale = Vector2(0.2680, 0.2680)
+	_sprite.offset = Vector2(0, -TEX.get_height() * 0.5 + 92.5)
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_mat = ShaderMaterial.new()
 	_mat.shader = SH_GLOW
