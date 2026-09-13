@@ -127,12 +127,17 @@ func _build_frames() -> SpriteFrames:
 	sf.remove_animation("default")
 	for r in range(4):
 		var dir_name: String = DIR_NAMES[r]
-		for prefix in ["walk_", "idle_"]:
-			var an: String = prefix + dir_name
-			sf.add_animation(an)
-			sf.set_animation_speed(an, 1.0)
-			sf.set_animation_loop(an, true)
-			sf.add_frame(an, _frame(0, r))
+		var walk: String = "walk_" + dir_name
+		sf.add_animation(walk)
+		sf.set_animation_speed(walk, 9.0)
+		sf.set_animation_loop(walk, true)
+		for c in range(6):
+			sf.add_frame(walk, _frame(c, r))
+		var idle: String = "idle_" + dir_name
+		sf.add_animation(idle)
+		sf.set_animation_speed(idle, 1.0)
+		sf.set_animation_loop(idle, true)
+		sf.add_frame(idle, _frame(0, r))
 	for extra in ["catch", "sit", "walk_lantern"]:
 		sf.add_animation(extra)
 		sf.set_animation_speed(extra, 1.0)
@@ -152,13 +157,21 @@ func _hand_anchor() -> Vector2:
 		3: return Vector2(10, -18)
 	return Vector2(14, -12)
 
+var _lantern_lit := true
+var _swing_t := 0.0
+
 func _on_item_changed(item_id: String, instant := false) -> void:
 	_hand.texture = Inventory.icon(item_id)
 	_hand.visible = item_id != "" and item_id != "jar"
-	# фонарь горит только когда он в руке
-	set_lantern(item_id == "lantern", instant)
-	if item_id == "lantern" and not instant:
-		AudioManager.play_sfx("lantern", -8.0, 1.2)
+	# фонарь светит, только когда он в руке и зажжён
+	set_lantern(item_id == "lantern" and _lantern_lit, instant)
+
+func toggle_lantern_lit() -> void:
+	_lantern_lit = not _lantern_lit
+	set_lantern(Inventory.active_item() == "lantern" and _lantern_lit)
+
+func swing() -> void:
+	_swing_t = 0.25
 
 func set_lantern(on: bool, instant := false) -> void:
 	GameState.lantern_on = on
@@ -210,13 +223,15 @@ func _physics_process(delta: float) -> void:
 	_bob_phase += delta * 9.0 * spd
 	_idle_phase += delta * 1.6
 	# шаг: подпрыгивание в такт + покачивание влево-вправо; стоя — медленное дыхание
-	var bob := absf(sin(_bob_phase)) * 3.0 * spd + sin(_idle_phase) * 0.8 * (1.0 - spd)
-	var sway := sin(_bob_phase) * 0.06 * spd
+	var bob := absf(sin(_bob_phase)) * 1.6 * spd + sin(_idle_phase) * 0.8 * (1.0 - spd)
+	var sway := sin(_bob_phase) * 0.03 * spd
 	var stretch := 1.0 + sin(_bob_phase * 2.0) * 0.03 * spd + sin(_idle_phase) * 0.012 * (1.0 - spd)
 	_sprite.position.y = lerpf(_sprite.position.y, -bob, delta * 20.0)
 	_sprite.scale = Vector2(0.4 / stretch, 0.4 * stretch)
 	_hand.position = _hand.position.lerp(_hand_anchor() + Vector2(0, -bob * 0.6 + sin(_bob_phase) * 1.5 * spd), delta * 15.0)
-	_hand.rotation = lerpf(_hand.rotation, sway * 2.0 + sin(_idle_phase) * 0.04, delta * 8.0)
+	_swing_t = maxf(_swing_t - delta, 0.0)
+	var swing := sin(_swing_t / 0.25 * PI) * 1.2 * (-1.0 if _row == 1 else 1.0)
+	_hand.rotation = lerpf(_hand.rotation, sway * 2.0 + sin(_idle_phase) * 0.04 + swing, delta * 14.0)
 	# лёгкий наклон корпуса по направлению движения, по диагонали чуть сильнее (иллюзия 8 направлений)
 	var diag := 0.0
 	if _walking and (_row == 1 or _row == 2):
@@ -245,10 +260,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not input_enabled:
 		return
 	if event.is_action_pressed("toggle_lantern"):
-		# F — быстро взять/убрать фонарь
+		# F — взять фонарь в руку (если он в быстром доступе) или зажечь/погасить
 		var idx: int = Inventory.hotbar.find("lantern")
-		if idx >= 0:
-			Inventory.set_active(idx if Inventory.active_item() != "lantern" else (1 if idx == 0 else 0))
+		if idx >= 0 and Inventory.active_item() != "lantern":
+			_lantern_lit = true
+			Inventory.set_active(idx)
+		elif Inventory.active_item() == "lantern":
+			toggle_lantern_lit()
 
 func flash() -> void:
 	_flash.modulate.a = 0.6

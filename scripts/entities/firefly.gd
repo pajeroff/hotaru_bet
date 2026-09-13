@@ -30,6 +30,9 @@ var _dim := 1.0
 var _bob := 0.0
 var _light_mul := 1.0
 var _body: Sprite2D
+var _attract_pos := Vector2.ZERO
+var _attract_t := 0.0
+var _calm_t := 0.0
 static var _tex_cache := {}
 
 func setup(d: Dictionary, player) -> void:
@@ -151,6 +154,12 @@ func _process(delta: float) -> void:
 	if _wander_timer <= 0.0:
 		_new_wander()
 	var desired := _wander
+	_attract_t = maxf(_attract_t - delta, 0.0)
+	_calm_t = maxf(_calm_t - delta, 0.0)
+	if _attract_t > 0.0:
+		var to_a := _attract_pos - global_position
+		if to_a.length() > 40.0:
+			desired += to_a.normalized() * 70.0
 	if _player != null and _state == "free":
 		var ppos: Vector2 = _player.global_position
 		var to_p := ppos - global_position
@@ -161,7 +170,7 @@ func _process(delta: float) -> void:
 			"friendly":
 				if d < 160 and d > 28: desired += to_p.normalized() * 30.0
 			"shy":
-				if d < 90 and pspeed > 90:
+				if d < 90 and pspeed > 90 and _calm_t <= 0.0:
 					_state = "fleeing"
 					_flee_timer = 1.6
 					_vel = -to_p.normalized() * 220.0
@@ -190,6 +199,15 @@ func _process(delta: float) -> void:
 		_wander = -global_position.normalized() * 25.0
 		global_position = global_position.clamp(-lim, lim)
 
+func attract_to(pos: Vector2, duration: float) -> void:
+	_attract_pos = pos
+	_attract_t = duration
+	if _state == "fleeing":
+		_state = "free"
+
+func set_calm(duration: float) -> void:
+	_calm_t = duration
+
 func set_hidden_alpha(a: float) -> void:
 	_hide_alpha = a
 
@@ -199,7 +217,7 @@ func set_dim(d: float) -> void:
 func try_catch() -> bool:
 	if _state != "free":
 		return false
-	if emotion == "shy" and randf() < 0.25:
+	if emotion == "shy" and _calm_t <= 0.0 and randf() < 0.25:
 		_state = "fleeing"
 		_flee_timer = 1.4
 		var ppos: Vector2 = _player.global_position

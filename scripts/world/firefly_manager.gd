@@ -10,6 +10,7 @@ var _sparks: Array = [] # оставшиеся искры после отпус�
 var _fog := 0.0
 var nearest
 var hud = null
+var _calm_t := 0.0
 
 func _ready() -> void:
 	GameState.firefly_released.connect(_on_released)
@@ -73,6 +74,18 @@ func spawn_one() -> void:
 	f.position = p
 	add_child(f)
 	_flies.append(f)
+
+## Колокольчик: светлячки в радиусе летят к точке на несколько секунд.
+func attract(pos: Vector2, radius: float, duration: float) -> void:
+	for f in _flies:
+		if f.global_position.distance_to(pos) < radius:
+			f.attract_to(pos, duration)
+
+## Флейта: пугливые не убегают некоторое время.
+func calm(duration: float) -> void:
+	_calm_t = duration
+	for f in _flies:
+		f.set_calm(duration)
 
 func try_catch() -> bool:
 	if nearest == null or not is_instance_valid(nearest):

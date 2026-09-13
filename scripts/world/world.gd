@@ -107,7 +107,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		Inventory.set_active(4)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("interact"):
-		fireflies.try_catch()
+		if fireflies.nearest != null and is_instance_valid(fireflies.nearest):
+			fireflies.try_catch()
+		else:
+			_use_item()
 		get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.is_pressed() and not event.is_echo():
 		var k := event as InputEventKey
@@ -134,6 +137,35 @@ func _open_pause() -> void:
 		_overlay_open = false
 		player.input_enabled = true
 	)
+
+func _use_item() -> void:
+	var item := Inventory.active_item()
+	match item:
+		"":
+			hud.show_toast(tr("USE_nothing"))
+		"lantern":
+			player.toggle_lantern_lit()
+			hud.show_toast(tr("USE_lantern_on") if GameState.lantern_on else tr("USE_lantern_off"))
+		"net":
+			player.swing()
+			if not fireflies.try_catch():
+				AudioManager.play_sfx("hover", -10.0, 1.4)
+		"jar":
+			_open_jar()
+		"bell":
+			AudioManager.play_sfx("chime", -6.0, 1.6)
+			fireflies.attract(player.global_position, 320.0, 6.0)
+			hud.show_toast(tr("USE_bell"))
+		"flute":
+			AudioManager.play_sfx("chime", -10.0, 0.7)
+			fireflies.calm(8.0)
+			hud.show_toast(tr("USE_flute"))
+		"snack":
+			AudioManager.play_sfx("click", -8.0)
+			hud.show_toast(tr("USE_snack"))
+			player.flash()
+		_:
+			hud.show_toast(tr("USE_" + item))
 
 func _open_inventory() -> void:
 	_overlay_open = true

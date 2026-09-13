@@ -254,7 +254,7 @@ const STRINGS := {
 	"CURRENT_SAVE": ["Текущее", "Current"],
 	"INV_TITLE": ["Рюкзак", "Backpack"],
 	"HOTBAR": ["Быстрый доступ", "Quick slots"],
-	"INV_HINT": ["Кликните по предмету, затем по ячейке, чтобы переложить", "Click an item, then a slot to move it"],
+	"INV_HINT": ["Перетащите предмет в нужную ячейку (или кликните по предмету, затем по ячейке)", "Drag an item to a slot (or click the item, then the slot)"],
 	"IT_lantern": ["Фонарь", "Lantern"], "ITD_lantern": ["Тёплый свет отпугивает тьму и подсвечивает тропу.", "Warm light keeps the dark away and lights the path."],
 	"IT_net": ["Сачок", "Net"], "ITD_net": ["С ним ловить светлячков чуть проще: радиус ловли больше.", "Makes catching easier: larger catch radius."],
 	"IT_jar": ["Банка", "Jar"], "ITD_jar": ["Стеклянная банка для светлячков. Нажмите I, чтобы заглянуть.", "Glass jar for fireflies. Press I to look inside."],
@@ -264,6 +264,15 @@ const STRINGS := {
 	"IT_flute": ["Флейта", "Flute"], "ITD_flute": ["Тихая мелодия успокаивает пугливых.", "A quiet tune calms the shy ones."],
 	"IT_map": ["Карта", "Map"], "ITD_map": ["Старая карта поляны.", "An old map of the glade."],
 	"EMPTY_SLOT": ["Пусто", "Empty"],
+	"USE_lantern_on": ["Фонарь зажжён", "Lantern lit"], "USE_lantern_off": ["Фонарь погашен", "Lantern out"],
+	"USE_bell": ["Колокольчик звенит — любопытные светлячки летят к вам", "The bell rings — curious fireflies come closer"],
+	"USE_flute": ["Тихая мелодия... пугливые светлячки успокаиваются", "A quiet tune... shy fireflies calm down"],
+	"USE_snack": ["Вкусно. Вы отдохнули.", "Tasty. You feel rested."],
+	"USE_map": ["Храм — в центре поляны, пруд — на юге.", "The temple is at the center, the pond to the south."],
+	"USE_crystal": ["Кристалл тихо мерцает.", "The crystal shimmers softly."],
+	"USE_net": ["Взмах сачком", "Net swing"],
+	"USE_nothing": ["В руке пусто", "Nothing in hand"],
+	"HINT_USE": ["E — использовать", "E — use"],
 	"JAR_TITLE": ["Банка", "Jar"],
 	"JAR_EMPTY": ["В банке пока пусто", "The jar is empty"],
 	"RELEASE": ["Отпустить", "Release"],
@@ -317,7 +326,7 @@ const STRINGS := {
 	"FF_mist": ["Туманный шёпот", "Mist Whisper"],
 	"FF_petal": ["Лепесток", "Petal"],
 	"FF_star": ["Упавшая звезда", "Fallen Star"],
-	"CONTROLS_HINT": ["WASD — идти · E — поймать · 1–5 — предмет · B — рюкзак · I — банка · F1–F3 — время · колесо — зум · Esc — пауза", "WASD — move · E — catch · 1–5 — item · B — backpack · I — jar · F1–F3 — time · wheel — zoom · Esc — pause"],
+	"CONTROLS_HINT": ["WASD — идти · E — поймать / использовать · 1–5 — предмет · Tab/B — рюкзак · I — банка · F1–F3 — время · Esc — пауза", "WASD — move · E — catch / use · 1–5 — item · Tab/B — backpack · I — jar · F1–F3 — time · Esc — pause"],
 }
 
 func _install_translations() -> void:
