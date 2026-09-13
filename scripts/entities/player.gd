@@ -122,9 +122,9 @@ func _build_frames() -> SpriteFrames:
 		for c in range(6):
 			sf.add_frame(walk, _frame(c, r))
 		sf.add_animation(idle)
-		sf.set_animation_speed(idle, 4.0)
+		sf.set_animation_speed(idle, 5.0)
 		sf.set_animation_loop(idle, true)
-		for c in idle_cycle:
+		for c in range(6):
 			sf.add_frame(idle, _frame(c, 4 + r))
 	# catch — одноразовая
 	sf.add_animation("catch")

@@ -44,9 +44,10 @@ static func make_theme(_dark := false) -> Theme:
 		t.set_color("font_hover_color", cls, INK)
 		t.set_color("font_pressed_color", cls, INK)
 		t.set_color("font_focus_color", cls, INK)
-	t.set_stylebox("normal", "OptionButton", _btn_tex(Color(1, 1, 1)))
-	t.set_stylebox("hover", "OptionButton", _btn_tex(Color(1.08, 1.04, 0.95)))
-	t.set_stylebox("pressed", "OptionButton", _btn_tex(Color(0.9, 0.85, 0.75)))
+	t.set_stylebox("normal", "OptionButton", _btn_tex(Color(1, 1, 1), true))
+	t.set_stylebox("hover", "OptionButton", _btn_tex(Color(1.08, 1.04, 0.95), true))
+	t.set_stylebox("pressed", "OptionButton", _btn_tex(Color(0.9, 0.85, 0.75), true))
+	t.set_font_size("font_size", "OptionButton", 18)
 	t.set_stylebox("focus", "OptionButton", _focus_style())
 	t.set_stylebox("normal", "CheckButton", _empty())
 	t.set_stylebox("hover", "CheckButton", _empty())
@@ -116,7 +117,7 @@ static func make_theme(_dark := false) -> Theme:
 static func _empty() -> StyleBoxEmpty:
 	return StyleBoxEmpty.new()
 
-static func _btn_tex(mod: Color) -> StyleBoxTexture:
+static func _btn_tex(mod: Color, compact := false) -> StyleBoxTexture:
 	var s := StyleBoxTexture.new()
 	s.texture = TEX_BUTTON
 	var w := TEX_BUTTON.get_width()
@@ -132,6 +133,11 @@ static func _btn_tex(mod: Color) -> StyleBoxTexture:
 	s.content_margin_right = w * 0.17 + 8
 	s.content_margin_top = h * 0.30 - 4
 	s.content_margin_bottom = h * 0.30 - 2
+	if compact:
+		s.content_margin_top = h * 0.30 - 10
+		s.content_margin_bottom = h * 0.30 - 8
+		s.content_margin_left = w * 0.17 + 4
+		s.content_margin_right = w * 0.17 + 4
 	s.modulate_color = mod
 	return s
 
@@ -156,10 +162,10 @@ static func _panel_tex() -> StyleBoxTexture:
 	s.texture_margin_right = w * 0.15
 	s.texture_margin_top = h * 0.17
 	s.texture_margin_bottom = h * 0.17
-	s.content_margin_left = w * 0.15 + 10
-	s.content_margin_right = w * 0.15 + 10
-	s.content_margin_top = h * 0.17 + 4
-	s.content_margin_bottom = h * 0.17 + 2
+	s.content_margin_left = w * 0.13
+	s.content_margin_right = w * 0.13
+	s.content_margin_top = h * 0.15
+	s.content_margin_bottom = h * 0.14
 	return s
 
 static func _paper_flat() -> StyleBoxFlat:

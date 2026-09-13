@@ -32,18 +32,25 @@ func _build() -> void:
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(760, 560)
+	var vp := get_viewport_rect().size
+	var psize := Vector2(minf(820.0, vp.x - 60.0), minf(620.0, vp.y - 40.0))
+	panel.custom_minimum_size = psize
+	# запрещаем панели расти: содержимое вкладок прокручивается
+	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	center.add_child(panel)
 
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	panel.add_child(v)
-	var st := UITheme.sign_title(tr("SETTINGS_TITLE"))
+	var st := UITheme.sign_title(tr("SETTINGS_TITLE"), 26)
+	st.custom_minimum_size = Vector2(300, 64)
 	st.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	v.add_child(st)
 
 	var tabs := TabContainer.new()
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tabs.clip_contents = true
 	tabs.add_theme_font_size_override("font_size", 20)
 	v.add_child(tabs)
 
@@ -69,8 +76,9 @@ func _on_back() -> void:
 func _row(parent: Control, label_key: String, control: Control) -> void:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 20)
-	var l := UITheme.label(tr(label_key), 20)
-	l.custom_minimum_size = Vector2(300, 0)
+	var l := UITheme.label(tr(label_key), 18)
+	l.custom_minimum_size = Vector2(280, 0)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	h.add_child(l)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -78,15 +86,24 @@ func _row(parent: Control, label_key: String, control: Control) -> void:
 	parent.add_child(h)
 
 func _tab(name_key: String) -> VBoxContainer:
+	## Вкладка фиксированного размера: содержимое прокручивается, панель не меняет габариты.
+	var sc := ScrollContainer.new()
+	sc.name = tr(name_key)
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var m := MarginContainer.new()
-	m.name = tr(name_key)
-	m.add_theme_constant_override("margin_left", 16)
-	m.add_theme_constant_override("margin_right", 16)
-	m.add_theme_constant_override("margin_top", 16)
+	m.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	m.add_theme_constant_override("margin_left", 12)
+	m.add_theme_constant_override("margin_right", 20)
+	m.add_theme_constant_override("margin_top", 10)
+	m.add_theme_constant_override("margin_bottom", 10)
+	sc.add_child(m)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 14)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.add_theme_constant_override("separation", 10)
 	m.add_child(v)
-	v.set_meta("container", m)
+	v.set_meta("container", sc)
 	return v
 
 func _wrap(v: VBoxContainer) -> Control:
@@ -194,14 +211,10 @@ func _audio_tab() -> Control:
 
 func _controls_tab() -> Control:
 	var v := _tab("TAB_CONTROLS")
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.custom_minimum_size = Vector2(0, 300)
 	var inner := VBoxContainer.new()
 	inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	inner.add_theme_constant_override("separation", 8)
-	scroll.add_child(inner)
-	v.add_child(scroll)
+	inner.add_theme_constant_override("separation", 6)
+	v.add_child(inner)
 	for a in Settings.ACTIONS:
 		var b := Button.new()
 		b.text = Settings.get_action_key_name(a)
