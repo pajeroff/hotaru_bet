@@ -26,7 +26,7 @@ func _ready() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(center)
 	_panel = PanelContainer.new()
-	_panel.custom_minimum_size = Vector2(860, 560)
+	_panel.custom_minimum_size = Vector2(760, 540)
 	_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	center.add_child(_panel)
@@ -46,7 +46,7 @@ func _ready() -> void:
 	v.add_child(h)
 	_jar_view = JarView.new()
 	_jar_view.big = true
-	_jar_view.custom_minimum_size = Vector2(220, 300)
+	_jar_view.custom_minimum_size = Vector2(200, 300)
 	_jar_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	h.add_child(_jar_view)
 	var right := VBoxContainer.new()
@@ -56,13 +56,14 @@ func _ready() -> void:
 	h.add_child(right)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.custom_minimum_size = Vector2(0, 200)
+	scroll.custom_minimum_size = Vector2(380, 240)
+	scroll.clip_contents = true
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(scroll)
 	_list = VBoxContainer.new()
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_list.add_theme_constant_override("separation", 8)
+	_list.add_theme_constant_override("separation", 6)
 	scroll.add_child(_list)
 	_info = UITheme.label("", 18)
 	_info.custom_minimum_size = Vector2(260, 0)
@@ -109,12 +110,18 @@ func _refresh() -> void:
 		b.toggle_mode = true
 		b.button_pressed = (i == _selected)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(0, 48)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.icon = _jar_view._sprite_for(str(f.get("kind", "gold")))
+		b.expand_icon = true
+		b.add_theme_constant_override("icon_max_width", 32)
 		var col := FireflyData.color_of(f)
-		b.text = "●  %s  (%d)" % [tr(str(f["name"])), GameStateScript.slot_cost(str(f["rarity"]))]
-		b.add_theme_color_override("font_color", col.darkened(0.35))
-		b.add_theme_color_override("font_hover_color", col.darkened(0.35))
-		b.add_theme_color_override("font_pressed_color", col.darkened(0.35))
-		UITheme.decorate_button(b)
+		b.text = "  %s  (%d)" % [tr(str(f["name"])), GameStateScript.slot_cost(str(f["rarity"]))]
+		b.add_theme_color_override("font_color", col.lightened(0.3))
+		b.add_theme_color_override("font_hover_color", col.lightened(0.5))
+		b.add_theme_color_override("font_pressed_color", col.lightened(0.5))
+		b.pressed.connect(func(): AudioManager.play_sfx("click", -8.0))
 		b.pressed.connect(_select.bind(i))
 		_list.add_child(b)
 	if _selected >= 0 and _selected < GameState.jar.size():

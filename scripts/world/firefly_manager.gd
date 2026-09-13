@@ -9,6 +9,7 @@ var _spawn_timer := 0.0
 var _sparks: Array = [] # оставшиеся искры после отпускания: {pos, t, color}
 var _fog := 0.0
 var nearest
+var hud = null
 
 func _ready() -> void:
 	GameState.firefly_released.connect(_on_released)
@@ -46,7 +47,7 @@ func _process(delta: float) -> void:
 	# ближайший для подсказки
 	nearest = null
 	if player != null:
-		var best := 40.0
+		var best := 70.0 if Inventory.active_item() == "net" else 40.0
 		for f in _flies:
 			if f._state != "free" or (f.emotion == "secret" and _fog < 0.5):
 				continue
@@ -77,6 +78,11 @@ func try_catch() -> bool:
 	if nearest == null or not is_instance_valid(nearest):
 		return false
 	var f = nearest
+	if not GameState.can_fit(str(f.data.get("rarity", "common"))):
+		AudioManager.play_sfx("hover", -6.0, 0.7)
+		if hud != null and hud.has_method("show_toast"):
+			hud.show_toast(tr("JAR_FULL"))
+		return false
 	if f.try_catch():
 		GameState.add_to_jar(f.data)
 		AudioManager.play_sfx("chime", -4.0, randf_range(0.95, 1.08))

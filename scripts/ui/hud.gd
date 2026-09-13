@@ -15,6 +15,8 @@ var _fps: Label
 var _speed_buttons: Array = []
 var _fireflies = null
 var _weekday_base := 0
+var _hot_slots: Array = []
+var _toast: Label
 
 func _ready() -> void:
 	layer = 10
@@ -105,26 +107,81 @@ func _ready() -> void:
 	jar_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	rv.add_child(jar_hint)
 	_jar_view = JarView.new()
-	_jar_view.custom_minimum_size = Vector2(72, 104)
+	_jar_view.custom_minimum_size = Vector2(60, 90)
 	rh.add_child(_jar_view)
+
+	# ---------- низ по центру: быстрый доступ + рюкзак ----------
+	var hot := PanelContainer.new()
+	hot.theme = hud_theme
+	hot.add_theme_stylebox_override("panel", st)
+	hot.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	hot.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	hot.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	hot.offset_top = -34
+	hot.offset_bottom = -34
+	add_child(hot)
+	var hh := HBoxContainer.new()
+	hh.add_theme_constant_override("separation", 8)
+	hot.add_child(hh)
+	for i in range(Inventory.HOTBAR_SIZE):
+		var sl := ItemSlot.new("hotbar", i, 56)
+		sl.hotkey = str(i + 1)
+		sl.pressed.connect(func(): Inventory.set_active(sl.index))
+		hh.add_child(sl)
+		_hot_slots.append(sl)
+	var sep := ColorRect.new()
+	sep.color = Color(UITheme.EDGE.r, UITheme.EDGE.g, UITheme.EDGE.b, 0.4)
+	sep.custom_minimum_size = Vector2(1, 40)
+	sep.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	hh.add_child(sep)
+	var bag := ItemSlot.new("bag", -1, 56)
+	bag.hotkey = "B"
+	bag.item_id = "backpack"
+	bag.tooltip_text = tr("INV_TITLE")
+	var bag_icon := TextureRect.new()
+	bag_icon.texture = _load_tex("res://assets/items/backpack.png")
+	bag_icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bag_icon.offset_left = 6
+	bag_icon.offset_top = 6
+	bag_icon.offset_right = -6
+	bag_icon.offset_bottom = -6
+	bag_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bag_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	bag_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bag.add_child(bag_icon)
+	bag.pressed.connect(func(): Input.parse_input_event(_make_action("open_inventory")))
+	hh.add_child(bag)
+	Inventory.changed.connect(_refresh_hotbar)
+	_refresh_hotbar()
 
 	# ---------- низ ----------
 	_hint = UITheme.label(tr("HINT_CATCH"), 20, UITheme.TEXT_LIGHT)
 	_hint.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_hint.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_hint.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_hint.position.y -= 80
+	_hint.position.y -= 120
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
 	_hint.add_theme_constant_override("shadow_outline_size", 6)
 	_hint.modulate.a = 0.0
 	add_child(_hint)
 
-	_controls = UITheme.label(tr("CONTROLS_HINT"), 14, Color(1, 1, 1, 0.55))
+	_toast = UITheme.label("", 20, UITheme.AMBER)
+	_toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_toast.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_toast.position.y -= 150
+	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_toast.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	_toast.add_theme_constant_override("shadow_outline_size", 6)
+	_toast.modulate.a = 0.0
+	add_child(_toast)
+
+	_controls = UITheme.label(tr("CONTROLS_HINT"), 13, Color(1, 1, 1, 0.45))
 	_controls.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_controls.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_controls.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_controls.position.y -= 18
+	_controls.position.y -= 8
 	_controls.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_controls.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
 	_controls.add_theme_constant_override("shadow_outline_size", 4)
@@ -217,3 +274,30 @@ func show_saved() -> void:
 	tw.tween_property(_saved, "modulate:a", 1.0, 0.3)
 	tw.tween_interval(1.6)
 	tw.tween_property(_saved, "modulate:a", 0.0, 0.8)
+
+func _load_tex(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		return load(path)
+	var img := Image.new()
+	if img.load(path) == OK:
+		return ImageTexture.create_from_image(img)
+	return null
+
+func _make_action(action: String) -> InputEventAction:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	return ev
+
+func _refresh_hotbar() -> void:
+	for sl in _hot_slots:
+		sl.set_item(str(Inventory.hotbar[sl.index]))
+		sl.set_state(Inventory.active_slot == sl.index, false)
+
+func show_toast(text: String) -> void:
+	_toast.text = text
+	var tw := create_tween()
+	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.tween_property(_toast, "modulate:a", 1.0, 0.15)
+	tw.tween_interval(1.2)
+	tw.tween_property(_toast, "modulate:a", 0.0, 0.5)

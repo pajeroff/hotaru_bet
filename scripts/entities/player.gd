@@ -31,6 +31,8 @@ var _action := "" # "catch", "sit"
 var _action_t := 0.0
 var _sit_after := 12.0
 var _bob_phase := 0.0
+var _idle_phase := 0.0
+var _hand: Sprite2D
 
 func _ready() -> void:
 	var cs := CollisionShape2D.new()
@@ -55,13 +57,19 @@ func _ready() -> void:
 	_sprite.animation = "idle_down"
 	_sprite.play()
 	add_child(_sprite)
+	_hand = Sprite2D.new()
+	_hand.scale = Vector2(0.28, 0.28)
+	_hand.z_index = 1
+	add_child(_hand)
+	Inventory.active_changed.connect(_on_item_changed)
+	_on_item_changed(Inventory.active_item())
 
 	_lantern = PointLight2D.new()
 	_lantern.texture = TEX_LIGHT
 	_lantern.color = Color(1.0, 0.88, 0.65)
 	_lantern.texture_scale = 2.6
 	_lantern.energy = 0.0
-	_lantern.position = Vector2(0, -20)
+	_lantern.position = Vector2(0, -14)
 	_lantern.shadow_enabled = false
 	add_child(_lantern)
 
@@ -84,10 +92,17 @@ func _ready() -> void:
 	pm.initial_velocity_min = 6.0
 	pm.initial_velocity_max = 16.0
 	pm.gravity = Vector3(0, 10, 0)
-	pm.scale_min = 0.1
-	pm.scale_max = 0.22
-	pm.color = Color(0.8, 0.75, 0.6, 0.35)
+	pm.scale_min = 0.08
+	pm.scale_max = 0.18
+	pm.color = Color(0.6, 0.95, 0.9, 0.35)
+	var dg := Gradient.new()
+	dg.set_color(0, Color(0.6, 0.95, 0.9, 0.5))
+	dg.set_color(1, Color(0.6, 0.95, 0.9, 0.0))
+	var dgt := GradientTexture1D.new()
+	dgt.gradient = dg
+	pm.color_ramp = dgt
 	_dust.process_material = pm
+	_dust.material = _add_material()
 	add_child(_dust)
 
 	_flash = Sprite2D.new()
@@ -107,44 +122,44 @@ func _frame(col: int, row: int) -> AtlasTexture:
 	return at
 
 func _build_frames() -> SpriteFrames:
-	## Лист 6x11 (96x128): строки 0..3 — ходьба вниз/влево/вправо/вверх (6 кадров),
-	## 4..7 — idle-дыхание по направлениям (4 кадра), 8 — catch, 9 — sit, 10 — ходьба с фонарём.
+	## Low-poly лист: сгенерированные кадры не совпадают по позе, поэтому для каждого направления
+	## берём один устойчивый кадр (col 0) и делаем шаг процедурно (боб, наклон, качание).
 	var sf := SpriteFrames.new()
 	sf.remove_animation("default")
-	var idle_cycle: Array[int] = [0, 1, 2, 3, 2, 1]
 	for r in range(4):
 		var dir_name: String = DIR_NAMES[r]
-		var walk: String = "walk_" + dir_name
-		var idle: String = "idle_" + dir_name
-		sf.add_animation(walk)
-		sf.set_animation_speed(walk, 11.0)
-		sf.set_animation_loop(walk, true)
-		for c in range(6):
-			sf.add_frame(walk, _frame(c, r))
-		sf.add_animation(idle)
-		sf.set_animation_speed(idle, 5.0)
-		sf.set_animation_loop(idle, true)
-		for c in range(6):
-			sf.add_frame(idle, _frame(c, 4 + r))
-	# catch — одноразовая
-	sf.add_animation("catch")
-	sf.set_animation_speed("catch", 8.0)
-	sf.set_animation_loop("catch", false)
-	for c in range(4):
-		sf.add_frame("catch", _frame(c, 8))
-	# sit — медленное дыхание сидя
-	sf.add_animation("sit")
-	sf.set_animation_speed("sit", 3.0)
-	sf.set_animation_loop("sit", true)
-	for c in idle_cycle:
-		sf.add_frame("sit", _frame(c, 9))
-	# walk_lantern
-	sf.add_animation("walk_lantern")
-	sf.set_animation_speed("walk_lantern", 10.0)
-	sf.set_animation_loop("walk_lantern", true)
-	for c in idle_cycle:
-		sf.add_frame("walk_lantern", _frame(c, 10))
+		for prefix in ["walk_", "idle_"]:
+			var an: String = prefix + dir_name
+			sf.add_animation(an)
+			sf.set_animation_speed(an, 1.0)
+			sf.set_animation_loop(an, true)
+			sf.add_frame(an, _frame(0, r))
+	for extra in ["catch", "sit", "walk_lantern"]:
+		sf.add_animation(extra)
+		sf.set_animation_speed(extra, 1.0)
+		sf.set_animation_loop(extra, extra != "catch")
+		sf.add_frame(extra, _frame(0, 0))
 	return sf
+
+static func _add_material() -> CanvasItemMaterial:
+	var m := CanvasItemMaterial.new()
+	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	return m
+
+func _hand_anchor() -> Vector2:
+	match _row:
+		1: return Vector2(-16, -14)
+		2: return Vector2(16, -14)
+		3: return Vector2(10, -18)
+	return Vector2(14, -12)
+
+func _on_item_changed(item_id: String) -> void:
+	_hand.texture = Inventory.icon(item_id)
+	_hand.visible = item_id != "" and item_id != "jar"
+	# фонарь горит только когда он в руке
+	set_lantern(item_id == "lantern", false)
+	if item_id == "lantern":
+		AudioManager.play_sfx("lantern", -8.0, 1.2)
 
 func set_lantern(on: bool, instant := false) -> void:
 	GameState.lantern_on = on
@@ -185,20 +200,27 @@ func _physics_process(delta: float) -> void:
 		anim = "sit"
 	if _sprite.animation != anim:
 		_sprite.play(anim)
+	_hand.z_index = -1 if _row == 3 else 1
+	_hand.flip_h = _row == 1
 	_sprite.speed_scale = clampf(velocity.length() / SPEED, 0.7, 1.15) if _walking else 1.0
 	# лёгкое "дыхание" стоя
 	# процедурная "жизнь" поверх кадров: вертикальный боб в такт шагам и мягкий squash&stretch
 	var spd := clampf(velocity.length() / SPEED, 0.0, 1.0)
-	_bob_phase += delta * 11.0 * maxf(spd, 0.0)
-	var bob := absf(sin(_bob_phase)) * 2.2 * spd
-	var stretch := 1.0 + sin(_bob_phase * 2.0) * 0.025 * spd
+	_bob_phase += delta * 9.0 * spd
+	_idle_phase += delta * 1.6
+	# шаг: подпрыгивание в такт + покачивание влево-вправо; стоя — медленное дыхание
+	var bob := absf(sin(_bob_phase)) * 3.0 * spd + sin(_idle_phase) * 0.8 * (1.0 - spd)
+	var sway := sin(_bob_phase) * 0.06 * spd
+	var stretch := 1.0 + sin(_bob_phase * 2.0) * 0.03 * spd + sin(_idle_phase) * 0.012 * (1.0 - spd)
 	_sprite.position.y = lerpf(_sprite.position.y, -bob, delta * 20.0)
 	_sprite.scale = Vector2(0.4 / stretch, 0.4 * stretch)
+	_hand.position = _hand.position.lerp(_hand_anchor() + Vector2(0, -bob * 0.6 + sin(_bob_phase) * 1.5 * spd), delta * 15.0)
+	_hand.rotation = lerpf(_hand.rotation, sway * 2.0 + sin(_idle_phase) * 0.04, delta * 8.0)
 	# лёгкий наклон корпуса по направлению движения, по диагонали чуть сильнее (иллюзия 8 направлений)
 	var diag := 0.0
 	if _walking and (_row == 1 or _row == 2):
 		diag = signf(velocity.x) * velocity.y / SPEED * 0.10
-	_sprite.rotation = lerpf(_sprite.rotation, velocity.x / SPEED * 0.04 + diag, delta * 6.0)
+	_sprite.rotation = lerpf(_sprite.rotation, velocity.x / SPEED * 0.05 + diag + sway, delta * 8.0)
 	_shadow.scale = Vector2(0.42, 0.16) * (1.0 - bob * 0.04)
 	_dust.emitting = _walking
 	if _walking:
@@ -209,7 +231,8 @@ func _physics_process(delta: float) -> void:
 			AudioManager.play_sfx("step", -14.0, randf_range(0.85, 1.15))
 	else:
 		_idle_t += delta
-	_lantern_glow.position.x = 12 if _row != 1 else -12
+	_lantern_glow.position = _hand.position + Vector2(0, 4)
+	_lantern.position = _hand.position
 	_lantern_glow.modulate.a = lerpf(_lantern_glow.modulate.a, (0.75 + 0.15 * sin(Time.get_ticks_msec() * 0.006)) if GameState.lantern_on else 0.0, delta * 6.0)
 	_flash.modulate.a = maxf(_flash.modulate.a - delta * 2.0, 0.0)
 	_flash.scale = _flash.scale.lerp(Vector2(0.6, 0.6), delta * 4.0)
@@ -221,7 +244,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not input_enabled:
 		return
 	if event.is_action_pressed("toggle_lantern"):
-		set_lantern(not GameState.lantern_on)
+		# F — быстро взять/убрать фонарь
+		var idx: int = Inventory.hotbar.find("lantern")
+		if idx >= 0:
+			Inventory.set_active(idx if Inventory.active_item() != "lantern" else (1 if idx == 0 else 0))
 
 func flash() -> void:
 	_flash.modulate.a = 0.6

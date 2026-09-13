@@ -29,6 +29,8 @@ var _hide_alpha := 1.0
 var _dim := 1.0
 var _bob := 0.0
 var _light_mul := 1.0
+var _body: Sprite2D
+static var _tex_cache := {}
 
 func setup(d: Dictionary, player) -> void:
 	data = d
@@ -49,16 +51,16 @@ func _ready() -> void:
 	_halo.scale = Vector2.ONE * glow_size * 1.1
 	_halo.modulate = Color(color.r, color.g, color.b, 0.35)
 	add_child(_halo)
-	# тёмное тельце — делает светлячка заметным на светлом дневном фоне
-	var body := Sprite2D.new()
-	body.texture = TEX_GLOW
-	body.scale = Vector2.ONE * glow_size * 0.16
-	body.modulate = Color(0.25, 0.18, 0.12, 0.85)
-	add_child(body)
+	# спрайт светлячка (крылья + светящееся брюшко)
+	_body = Sprite2D.new()
+	_body.texture = _sprite_tex(str(data.get("kind", "gold")))
+	_body.scale = Vector2.ONE * 0.18 * (0.9 + 0.25 * (glow_size - 1.0))
+	add_child(_body)
 	_core = Sprite2D.new()
 	_core.texture = TEX_GLOW
 	_core.material = add_mat
-	_core.scale = Vector2.ONE * glow_size * 0.36
+	_core.scale = Vector2.ONE * glow_size * 0.30
+	_core.position = Vector2(0, 4)
 	_core.modulate = Color(color.r * 0.6 + 0.4, color.g * 0.6 + 0.4, color.b * 0.6 + 0.4, 1)
 	add_child(_core)
 	var q := clampi(Settings.particle_quality, 0, 2)
@@ -75,7 +77,12 @@ func _ready() -> void:
 	_trail.amount = (6 if rarity == "common" else 12) if q < 2 else (16 if rarity == "common" else 28)
 	_trail.visible = true
 	_trail.material = add_mat
-	_trail.lifetime = 0.9
+	_trail.lifetime = 1.1
+	var sc := Curve.new()
+	sc.add_point(Vector2(0, 1.0))
+	sc.add_point(Vector2(1, 0.0))
+	var sct := CurveTexture.new()
+	sct.curve = sc
 	_trail.texture = TEX_GLOW
 	_trail.local_coords = false
 	var pm := ParticleProcessMaterial.new()
@@ -91,9 +98,26 @@ func _ready() -> void:
 	var gt := GradientTexture1D.new()
 	gt.gradient = grad
 	pm.color_ramp = gt
+	pm.scale_curve = sct
+	pm.damping_min = 2.0
+	pm.damping_max = 4.0
 	_trail.process_material = pm
 	add_child(_trail)
 	_new_wander()
+
+static func _sprite_tex(kind: String) -> Texture2D:
+	if _tex_cache.has(kind):
+		return _tex_cache[kind]
+	var path := "res://assets/sprites/fireflies/%s.png" % kind
+	var tex: Texture2D = null
+	if ResourceLoader.exists(path):
+		tex = load(path)
+	else:
+		var img := Image.new()
+		if img.load(path) == OK:
+			tex = ImageTexture.create_from_image(img)
+	_tex_cache[kind] = tex
+	return tex
 
 func _new_wander() -> void:
 	_wander = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized() * randf_range(10.0, 35.0)
@@ -114,6 +138,13 @@ func _process(delta: float) -> void:
 	if rarity == "legendary":
 		_halo.rotation += delta * 0.5
 	_core.scale.x = _core.scale.x * (1.0 + 0.25 * absf(sin(_t * 20.0)))
+	if _body != null:
+		_body.modulate.a = a
+		var bs := 0.18 * (0.9 + 0.25 * (glow_size - 1.0))
+		_body.scale = Vector2(bs * (1.0 + 0.12 * sin(_t * 40.0)), bs)
+		if absf(_vel.x) > 2.0:
+			_body.flip_h = _vel.x < 0.0
+		_body.rotation = lerpf(_body.rotation, clampf(_vel.y / 60.0, -0.4, 0.4) * (-1.0 if _body.flip_h else 1.0), 0.1)
 	if _state == "caught":
 		return
 	_wander_timer -= delta
@@ -149,8 +180,10 @@ func _process(delta: float) -> void:
 	var jitter := Vector2(sin(_t * 3.1 + _seed), cos(_t * 2.3 + _seed * 2.0)) * 14.0
 	global_position += (_vel + jitter) * delta
 	_bob = sin(_t * 2.0 + _seed) * 3.0
-	_core.position.y = _bob
+	_core.position.y = _bob + 4.0
 	_halo.position.y = _bob
+	if _body != null:
+		_body.position.y = _bob
 	_light.position.y = _bob
 	var lim := Vector2(1580, 1100)
 	if absf(global_position.x) > lim.x or absf(global_position.y) > lim.y:
@@ -175,6 +208,28 @@ func try_catch() -> bool:
 		return false
 	_state = "caught"
 	caught.emit(self)
+	var burst := GPUParticles2D.new()
+	burst.one_shot = true
+	burst.amount = 18
+	burst.lifetime = 0.6
+	burst.explosiveness = 1.0
+	burst.texture = TEX_GLOW
+	burst.material = _halo.material
+	var bm := ParticleProcessMaterial.new()
+	bm.spread = 180.0
+	bm.initial_velocity_min = 40.0
+	bm.initial_velocity_max = 120.0
+	bm.damping_min = 60.0
+	bm.damping_max = 120.0
+	bm.scale_min = 0.06
+	bm.scale_max = 0.16
+	bm.color = color
+	burst.process_material = bm
+	burst.global_position = global_position
+	burst.z_index = 6
+	get_parent().add_child(burst)
+	burst.emitting = true
+	get_tree().create_timer(1.0).timeout.connect(burst.queue_free)
 	var ppos2: Vector2 = _player.global_position
 	var tw := create_tween()
 	tw.tween_property(self, "global_position", ppos2 + Vector2(0, -24), 0.35).set_trans(Tween.TRANS_SINE)

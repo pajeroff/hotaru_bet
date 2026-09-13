@@ -63,6 +63,7 @@ func _ready() -> void:
 	hud = HudScript.new()
 	add_child(hud)
 	hud.set_firefly_manager(fireflies)
+	fireflies.hud = hud
 
 	GameState.running = true
 	if SaveManager.seconds_since_save() == INF:
@@ -91,6 +92,20 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("open_jar"):
 		_open_jar()
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("open_inventory"):
+		_open_inventory()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("hotbar_1"):
+		Inventory.set_active(0)
+	elif event.is_action_pressed("hotbar_2"):
+		Inventory.set_active(1)
+	elif event.is_action_pressed("hotbar_3"):
+		Inventory.set_active(2)
+	elif event.is_action_pressed("hotbar_4"):
+		Inventory.set_active(3)
+	elif event.is_action_pressed("hotbar_5"):
+		Inventory.set_active(4)
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("interact"):
 		fireflies.try_catch()
 		get_viewport().set_input_as_handled()
@@ -99,9 +114,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		var code: int = k.physical_keycode if k.physical_keycode != 0 else k.keycode
 		var speed := ""
 		match code:
-			KEY_1, KEY_KP_1: speed = "normal"
-			KEY_2, KEY_KP_2: speed = "fast"
-			KEY_3, KEY_KP_3: speed = "faster"
+			KEY_F1: speed = "normal"
+			KEY_F2: speed = "fast"
+			KEY_F3: speed = "faster"
 		if speed != "":
 			Settings.time_speed = speed
 			Settings.save()
@@ -116,6 +131,16 @@ func _open_pause() -> void:
 	var pm = PauseScript.new()
 	add_child(pm)
 	pm.resumed.connect(func():
+		_overlay_open = false
+		player.input_enabled = true
+	)
+
+func _open_inventory() -> void:
+	_overlay_open = true
+	player.input_enabled = false
+	var inv = preload("res://scripts/ui/inventory_panel.gd").new()
+	add_child(inv)
+	inv.closed.connect(func():
 		_overlay_open = false
 		player.input_enabled = true
 	)

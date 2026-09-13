@@ -7,6 +7,7 @@ const TEX_RAIN := preload("res://assets/textures/raindrop.png")
 const TEX_PETAL := preload("res://assets/textures/petal.png")
 const SH_FOG := preload("res://shaders/fog.gdshader")
 const SH_POST := preload("res://shaders/post.gdshader")
+const SH_RAIN := preload("res://shaders/rain.gdshader")
 
 var _modulate: CanvasModulate
 var _overlay: Control
@@ -23,6 +24,10 @@ var _cur_light := Color(1, 1, 1)
 var _fog_a := 0.0
 var _dark_a := 0.0
 var _flash := 0.0
+var _rain_rect: ColorRect
+var _rain_mat: ShaderMaterial
+var _rain_a := 0.0
+var _storm := false
 var _star_a := 0.0
 var _silence_a := 0.0
 var _thunder_timer := 5.0
@@ -34,9 +39,21 @@ var _leaves: Array = []
 func _ready() -> void:
 	layer = 5
 	# слой частиц погоды (в экранных координатах)
-	_rain = _make_weather_particles(TEX_RAIN, 400, Vector3(-60, 900, 0), 0.9, 0.5, 1.0, Color(0.85, 0.92, 1.0, 0.55))
-	_snow = _make_weather_particles(TEX_GLOW, 260, Vector3(6, 40, 0), 9.0, 0.08, 0.2, Color(1, 1, 1, 0.85))
-	_petals = _make_weather_particles(TEX_PETAL, 160, Vector3(30, 60, 0), 8.0, 0.7, 1.2, Color(1, 0.85, 0.9, 0.9))
+	# дождь — шейдерный слой (косые штрихи), брызги — частицы у земли
+	_rain_rect = ColorRect.new()
+	_rain_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_rain_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_rain_mat = ShaderMaterial.new()
+	_rain_mat.shader = SH_RAIN
+	_rain_rect.material = _rain_mat
+	add_child(_rain_rect)
+	_rain = _make_weather_particles(TEX_GLOW, 120, Vector3(0, -30, 0), 0.5, 0.05, 0.12, Color(0.8, 0.95, 1.0, 0.5))
+	_rain.position = Vector2(640, 720)
+	(_rain.process_material as ParticleProcessMaterial).emission_box_extents = Vector3(900, 260, 0)
+	(_rain.process_material as ParticleProcessMaterial).gravity = Vector3(0, 120, 0)
+	(_rain.process_material as ParticleProcessMaterial).spread = 60.0
+	_snow = _make_weather_particles(TEX_GLOW, 220, Vector3(8, 34, 0), 11.0, 0.10, 0.26, Color(0.9, 0.97, 1.0, 0.85))
+	_petals = _make_weather_particles(TEX_GLOW, 140, Vector3(24, 40, 0), 9.0, 0.10, 0.22, Color(0.75, 1.0, 0.9, 0.85))
 	add_child(_rain)
 	add_child(_snow)
 	add_child(_petals)
@@ -110,7 +127,6 @@ func _apply_quality() -> void:
 	var muls: Array[float] = [0.25, 0.55, 1.0]
 	var blooms: Array[float] = [0.3, 0.5, 0.65]
 	var mul: float = muls[q]
-	_rain.amount_ratio = mul
 	_snow.amount_ratio = mul
 	_petals.amount_ratio = mul
 	_post_mat.set_shader_parameter("bloom_strength", blooms[q])
@@ -196,6 +212,13 @@ func _process(delta: float) -> void:
 	_post_mat.set_shader_parameter("saturation", 1.1 - 0.35 * _silence_a - 0.15 * _fog_a)
 	# гроза
 	_flash = maxf(_flash - delta * 2.5, 0.0)
+	var want_rain := 0.0
+	if GameState.weather == "rain": want_rain = 0.55
+	elif GameState.weather == "storm": want_rain = 1.0
+	_rain_a = move_toward(_rain_a, want_rain, delta * 0.35)
+	_rain_mat.set_shader_parameter("intensity", _rain_a)
+	_rain_mat.set_shader_parameter("wind", -0.12 - 0.25 * _rain_a + sin(Time.get_ticks_msec() * 0.0004) * 0.05)
+	_rain.amount_ratio = clampf(_rain_a, 0.05, 1.0) * (0.5 + 0.5 * float(Settings.particle_quality) / 2.0)
 	if w == "storm":
 		_thunder_timer -= delta
 		if _thunder_timer <= 0.0:

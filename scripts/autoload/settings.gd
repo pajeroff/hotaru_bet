@@ -6,7 +6,7 @@ signal quality_changed
 signal language_changed
 
 const PATH := "user://settings.cfg"
-const ACTIONS := ["move_up", "move_down", "move_left", "move_right", "interact", "open_jar", "toggle_lantern", "pause"]
+const ACTIONS := ["move_up", "move_down", "move_left", "move_right", "interact", "open_jar", "open_inventory", "toggle_lantern", "pause"]
 const RESOLUTIONS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
 const TIME_SPEEDS := {"normal": 1.0, "fast": 1.5, "faster": 2.0}
 const FPS_LIMITS: Array[int] = [0, 30, 60, 90, 120, 144, 165, 240]
@@ -215,6 +215,7 @@ const STRINGS := {
 	"ACT_move_right": ["Движение вправо", "Move right"],
 	"ACT_interact": ["Взаимодействие", "Interact"],
 	"ACT_open_jar": ["Открыть банку", "Open jar"],
+	"ACT_open_inventory": ["Рюкзак", "Backpack"],
 	"ACT_toggle_lantern": ["Фонарь", "Lantern"],
 	"ACT_pause": ["Пауза", "Pause"],
 	"PRESS_KEY": ["Нажмите клавишу…", "Press a key…"],
@@ -251,6 +252,18 @@ const STRINGS := {
 	"TIME_SPEED_SHORT": ["Время", "Time"],
 	"JAR_LOOK": ["Заглянуть в банку", "Look into the jar"],
 	"CURRENT_SAVE": ["Текущее", "Current"],
+	"INV_TITLE": ["Рюкзак", "Backpack"],
+	"HOTBAR": ["Быстрый доступ", "Quick slots"],
+	"INV_HINT": ["Кликните по предмету, затем по ячейке, чтобы переложить", "Click an item, then a slot to move it"],
+	"IT_lantern": ["Фонарь", "Lantern"], "ITD_lantern": ["Тёплый свет отпугивает тьму и подсвечивает тропу.", "Warm light keeps the dark away and lights the path."],
+	"IT_net": ["Сачок", "Net"], "ITD_net": ["С ним ловить светлячков чуть проще: радиус ловли больше.", "Makes catching easier: larger catch radius."],
+	"IT_jar": ["Банка", "Jar"], "ITD_jar": ["Стеклянная банка для светлячков. Нажмите I, чтобы заглянуть.", "Glass jar for fireflies. Press I to look inside."],
+	"IT_bell": ["Колокольчик", "Bell"], "ITD_bell": ["Его звон привлекает любопытных светлячков.", "Its ring attracts curious fireflies."],
+	"IT_crystal": ["Кристалл", "Crystal"], "ITD_crystal": ["Осколок света храма.", "A shard of the temple light."],
+	"IT_snack": ["Онигири", "Onigiri"], "ITD_snack": ["Перекус на привале.", "A snack for a rest."],
+	"IT_flute": ["Флейта", "Flute"], "ITD_flute": ["Тихая мелодия успокаивает пугливых.", "A quiet tune calms the shy ones."],
+	"IT_map": ["Карта", "Map"], "ITD_map": ["Старая карта поляны.", "An old map of the glade."],
+	"EMPTY_SLOT": ["Пусто", "Empty"],
 	"JAR_TITLE": ["Банка", "Jar"],
 	"JAR_EMPTY": ["В банке пока пусто", "The jar is empty"],
 	"RELEASE": ["Отпустить", "Release"],
@@ -304,7 +317,7 @@ const STRINGS := {
 	"FF_mist": ["Туманный шёпот", "Mist Whisper"],
 	"FF_petal": ["Лепесток", "Petal"],
 	"FF_star": ["Упавшая звезда", "Fallen Star"],
-	"CONTROLS_HINT": ["WASD — идти · E — поймать · I — банка · F — фонарь · 1/2/3 — время · колесо — зум · Esc — пауза", "WASD — move · E — catch · I — jar · F — lantern · 1/2/3 — time · wheel — zoom · Esc — pause"],
+	"CONTROLS_HINT": ["WASD — идти · E — поймать · 1–5 — предмет · B — рюкзак · I — банка · F1–F3 — время · колесо — зум · Esc — пауза", "WASD — move · E — catch · 1–5 — item · B — backpack · I — jar · F1–F3 — time · wheel — zoom · Esc — pause"],
 }
 
 func _install_translations() -> void:

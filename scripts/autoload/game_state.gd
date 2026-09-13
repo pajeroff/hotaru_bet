@@ -37,6 +37,7 @@ func reset_new_game() -> void:
 	season = "spring"
 	player_position = Vector2(0, 160)
 	jar.clear()
+	Inventory.reset()
 	total_caught = 0
 	temple_level = 0
 	temple_energy = 0.15
@@ -55,6 +56,7 @@ func to_dict() -> Dictionary:
 		"temple_level": temple_level, "temple_energy": temple_energy,
 		"lantern_on": lantern_on, "weather_timer": _weather_timer,
 		"saved_at": Time.get_datetime_string_from_system(false, true),
+		"inventory": Inventory.to_dict(),
 	}
 
 func from_dict(d: Dictionary) -> void:
@@ -69,6 +71,7 @@ func from_dict(d: Dictionary) -> void:
 	temple_energy = float(d.get("temple_energy", 0.0))
 	lantern_on = bool(d.get("lantern_on", false))
 	_weather_timer = float(d.get("weather_timer", 3.0))
+	Inventory.from_dict(d.get("inventory", {}))
 	_phase = ""
 	_emit_phase()
 	jar_changed.emit()
