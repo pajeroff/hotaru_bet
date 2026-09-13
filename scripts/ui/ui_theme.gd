@@ -38,7 +38,7 @@ static func make_theme(_dark := false) -> Theme:
 	t.set_color("font_pressed_color", "Button", INK)
 	t.set_color("font_focus_color", "Button", INK)
 	t.set_color("font_disabled_color", "Button", MUTED)
-	t.set_font_size("font_size", "Button", 22)
+	t.set_font_size("font_size", "Button", 21)
 	for cls in ["OptionButton", "CheckButton", "CheckBox"]:
 		t.set_color("font_color", cls, INK)
 		t.set_color("font_hover_color", cls, INK)
@@ -121,14 +121,17 @@ static func _btn_tex(mod: Color) -> StyleBoxTexture:
 	s.texture = TEX_BUTTON
 	var w := TEX_BUTTON.get_width()
 	var h := TEX_BUTTON.get_height()
-	s.texture_margin_left = w * 0.16
-	s.texture_margin_right = w * 0.16
-	s.texture_margin_top = h * 0.35
-	s.texture_margin_bottom = h * 0.35
-	s.content_margin_left = 26
-	s.content_margin_right = 26
-	s.content_margin_top = 8
-	s.content_margin_bottom = 10
+	# бумага начинается на ~18% ширины и ~28% высоты текстуры
+	s.texture_margin_left = w * 0.17
+	s.texture_margin_right = w * 0.17
+	s.texture_margin_top = h * 0.30
+	s.texture_margin_bottom = h * 0.30
+	s.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	s.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	s.content_margin_left = w * 0.17 + 8
+	s.content_margin_right = w * 0.17 + 8
+	s.content_margin_top = h * 0.30 - 4
+	s.content_margin_bottom = h * 0.30 - 2
 	s.modulate_color = mod
 	return s
 
@@ -148,14 +151,15 @@ static func _panel_tex() -> StyleBoxTexture:
 	s.texture = TEX_PANEL
 	var w := TEX_PANEL.get_width()
 	var h := TEX_PANEL.get_height()
-	s.texture_margin_left = w * 0.14
-	s.texture_margin_right = w * 0.14
-	s.texture_margin_top = h * 0.16
-	s.texture_margin_bottom = h * 0.16
-	s.content_margin_left = 44
-	s.content_margin_right = 44
-	s.content_margin_top = 40
-	s.content_margin_bottom = 36
+	# резные углы ~15% ширины / 17% высоты; бумага внутри начинается чуть дальше
+	s.texture_margin_left = w * 0.15
+	s.texture_margin_right = w * 0.15
+	s.texture_margin_top = h * 0.17
+	s.texture_margin_bottom = h * 0.17
+	s.content_margin_left = w * 0.15 + 10
+	s.content_margin_right = w * 0.15 + 10
+	s.content_margin_top = h * 0.17 + 8
+	s.content_margin_bottom = h * 0.17 + 6
 	return s
 
 static func _paper_flat() -> StyleBoxFlat:
@@ -214,7 +218,7 @@ static func decorate_button(b: Button) -> void:
 static func button(text_key: String, min_w := 260) -> Button:
 	var b := Button.new()
 	b.text = text_key
-	b.custom_minimum_size = Vector2(min_w, 48)
+	b.custom_minimum_size = Vector2(min_w, 56)
 	b.focus_mode = Control.FOCUS_ALL
 	decorate_button(b)
 	return b

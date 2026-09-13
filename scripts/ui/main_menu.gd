@@ -56,27 +56,27 @@ func _ready() -> void:
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(panel)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 8)
+	v.add_theme_constant_override("separation", 6)
 	panel.add_child(v)
 
 	var last := SaveManager.get_last_slot()
-	var b_continue := UITheme.button(tr("MENU_CONTINUE"), 300)
+	var b_continue := UITheme.button(tr("MENU_CONTINUE"), 320)
 	b_continue.disabled = last == ""
 	if last != "":
 		var meta: Dictionary = SaveManager.read_save(last).get("meta", {})
 		b_continue.tooltip_text = "%s — %s %d" % [str(meta.get("name", "")), tr("DAY"), int(meta.get("day", 1))]
 	b_continue.pressed.connect(func(): SceneRouter.load_game(last))
 	v.add_child(b_continue)
-	var b_new := UITheme.button(tr("MENU_NEW"), 300)
+	var b_new := UITheme.button(tr("MENU_NEW"), 320)
 	b_new.pressed.connect(func(): SceneRouter.start_new_game())
 	v.add_child(b_new)
-	var b_load := UITheme.button(tr("MENU_LOAD"), 300)
+	var b_load := UITheme.button(tr("MENU_LOAD"), 320)
 	b_load.pressed.connect(func(): SceneRouter.go_to(SceneRouter.LOAD_SCREEN, 0.4))
 	v.add_child(b_load)
-	var b_settings := UITheme.button(tr("MENU_SETTINGS"), 300)
+	var b_settings := UITheme.button(tr("MENU_SETTINGS"), 320)
 	b_settings.pressed.connect(func(): SceneRouter.open_settings(SceneRouter.MAIN_MENU))
 	v.add_child(b_settings)
-	var b_quit := UITheme.button(tr("MENU_QUIT"), 300)
+	var b_quit := UITheme.button(tr("MENU_QUIT"), 320)
 	b_quit.pressed.connect(func(): get_tree().quit())
 	v.add_child(b_quit)
 
