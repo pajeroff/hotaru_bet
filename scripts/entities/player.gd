@@ -107,48 +107,43 @@ func _frame(col: int, row: int) -> AtlasTexture:
 	return at
 
 func _build_frames() -> SpriteFrames:
+	## Лист 6x11 (96x128): строки 0..3 — ходьба вниз/влево/вправо/вверх (6 кадров),
+	## 4..7 — idle-дыхание по направлениям (4 кадра), 8 — catch, 9 — sit, 10 — ходьба с фонарём.
 	var sf := SpriteFrames.new()
 	sf.remove_animation("default")
-	# Ходьба: кадры листа 0..3 — в пинг-понг цикле 0,1,2,3,2,1 шаг выглядит плавнее и без рывка на стыке.
-	var walk_cycle: Array[int] = [0, 1, 2, 3, 2, 1]
+	var idle_cycle: Array[int] = [0, 1, 2, 3, 2, 1]
 	for r in range(4):
 		var dir_name: String = DIR_NAMES[r]
 		var walk: String = "walk_" + dir_name
 		var idle: String = "idle_" + dir_name
 		sf.add_animation(walk)
-		sf.set_animation_speed(walk, 10.0)
+		sf.set_animation_speed(walk, 11.0)
 		sf.set_animation_loop(walk, true)
-		for c in walk_cycle:
+		for c in range(6):
 			sf.add_frame(walk, _frame(c, r))
-		# Idle: "стоячий" кадр — тот, где ноги ближе всего друг к другу (кадр 1 в этом листе).
 		sf.add_animation(idle)
-		sf.set_animation_speed(idle, 1.0)
+		sf.set_animation_speed(idle, 4.0)
 		sf.set_animation_loop(idle, true)
-		sf.add_frame(idle, _frame(1, r))
-	# Дополнительные анимации из второго блока листа (строки 4..7)
-	# idle_down — дыхание, пинг-понг 0,1,2,3,2,1
-	sf.clear("idle_down")
-	sf.set_animation_speed("idle_down", 4.0)
-	for c in walk_cycle:
-		sf.add_frame("idle_down", _frame(c, 4))
+		for c in idle_cycle:
+			sf.add_frame(idle, _frame(c, 4 + r))
 	# catch — одноразовая
 	sf.add_animation("catch")
 	sf.set_animation_speed("catch", 8.0)
 	sf.set_animation_loop("catch", false)
 	for c in range(4):
-		sf.add_frame("catch", _frame(c, 5))
+		sf.add_frame("catch", _frame(c, 8))
 	# sit — медленное дыхание сидя
 	sf.add_animation("sit")
 	sf.set_animation_speed("sit", 3.0)
 	sf.set_animation_loop("sit", true)
-	for c in walk_cycle:
-		sf.add_frame("sit", _frame(c, 6))
+	for c in idle_cycle:
+		sf.add_frame("sit", _frame(c, 9))
 	# walk_lantern
 	sf.add_animation("walk_lantern")
 	sf.set_animation_speed("walk_lantern", 10.0)
 	sf.set_animation_loop("walk_lantern", true)
-	for c in walk_cycle:
-		sf.add_frame("walk_lantern", _frame(c, 7))
+	for c in idle_cycle:
+		sf.add_frame("walk_lantern", _frame(c, 10))
 	return sf
 
 func set_lantern(on: bool, instant := false) -> void:

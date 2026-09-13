@@ -44,10 +44,9 @@ func open_settings(from_scene: String) -> void:
 
 func start_new_game() -> void:
 	GameState.reset_new_game()
-	SaveManager.active_slot = SaveManager.first_free_slot()
+	SaveManager.start_new_session()
 	go_to(WORLD, 0.9)
 
-func load_game(slot: int) -> void:
-	if SaveManager.load_slot(slot):
-		SaveManager.active_slot = slot
+func load_game(slot_id: String) -> void:
+	if SaveManager.load_game(slot_id):
 		go_to(WORLD, 0.9)

@@ -24,11 +24,7 @@ func _build() -> void:
 	if not embedded:
 		var bg = preload("res://scripts/ui/menu_background.gd").new()
 		add_child(bg)
-	else:
-		var dim := ColorRect.new()
-		dim.color = Color(0.1, 0.1, 0.16, 0.55)
-		dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-		add_child(dim)
+	add_child(UITheme.dim_layer())
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -41,7 +37,9 @@ func _build() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	panel.add_child(v)
-	v.add_child(UITheme.title(tr("SETTINGS_TITLE"), 40))
+	var st := UITheme.sign_title(tr("SETTINGS_TITLE"))
+	st.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	v.add_child(st)
 
 	var tabs := TabContainer.new()
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -57,7 +55,7 @@ func _build() -> void:
 	b_back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	b_back.pressed.connect(_on_back)
 	v.add_child(b_back)
-	UITheme.fade_in(panel, 0.5)
+	UITheme.pop_in(panel)
 
 func _on_back() -> void:
 	Settings.save()

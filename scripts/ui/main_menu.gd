@@ -10,54 +10,96 @@ func _ready() -> void:
 
 	var bg = preload("res://scripts/ui/menu_background.gd").new()
 	add_child(bg)
+	# лёгкое затемнение снизу для читаемости
+	var grad := TextureRect.new()
+	grad.set_anchors_preset(Control.PRESET_FULL_RECT)
+	grad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var gt := GradientTexture2D.new()
+	var g := Gradient.new()
+	g.set_color(0, Color(0.05, 0.03, 0.08, 0.0))
+	g.set_color(1, Color(0.05, 0.03, 0.08, 0.55))
+	gt.gradient = g
+	gt.fill_from = Vector2(0, 0.3)
+	gt.fill_to = Vector2(0, 1)
+	grad.texture = gt
+	add_child(grad)
 
-	var cc := CenterContainer.new()
-	cc.set_anchors_preset(Control.PRESET_FULL_RECT)
-	cc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(cc)
-	var center := VBoxContainer.new()
-	center.alignment = BoxContainer.ALIGNMENT_CENTER
-	center.add_theme_constant_override("separation", 14)
-	cc.add_child(center)
+	# левая колонка с меню на бумажной панели
+	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 90)
+	margin.add_theme_constant_override("margin_top", 60)
+	margin.add_theme_constant_override("margin_bottom", 60)
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(margin)
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	col.add_theme_constant_override("separation", 10)
+	margin.add_child(col)
 
-	var t := UITheme.title("Хотару", 84)
-	center.add_child(t)
-	var sub := UITheme.label("остров у древнего храма", 18, UITheme.MUTED)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	center.add_child(sub)
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 30)
-	center.add_child(spacer)
+	var t := UITheme.title("Хотару", 92, UITheme.TEXT_LIGHT)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	t.add_theme_color_override("font_shadow_color", Color(0.2, 0.1, 0.05, 0.7))
+	t.add_theme_constant_override("shadow_offset_y", 4)
+	t.add_theme_constant_override("shadow_outline_size", 10)
+	col.add_child(t)
+	var sub := UITheme.label("остров у древнего храма", 20, Color(1, 0.95, 0.85, 0.85))
+	sub.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
+	sub.add_theme_constant_override("shadow_outline_size", 4)
+	col.add_child(sub)
+	var sp := Control.new()
+	sp.custom_minimum_size = Vector2(0, 28)
+	col.add_child(sp)
 
-	var b_continue := UITheme.button(tr("MENU_CONTINUE"))
-	b_continue.disabled = SaveManager.get_last_slot() < 0
-	b_continue.pressed.connect(func(): SceneRouter.load_game(SaveManager.get_last_slot()))
-	center.add_child(b_continue)
+	var panel := PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	col.add_child(panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	panel.add_child(v)
 
-	var b_new := UITheme.button(tr("MENU_NEW"))
+	var last := SaveManager.get_last_slot()
+	var b_continue := UITheme.button(tr("MENU_CONTINUE"), 300)
+	b_continue.disabled = last == ""
+	if last != "":
+		var meta: Dictionary = SaveManager.read_save(last).get("meta", {})
+		b_continue.tooltip_text = "%s — %s %d" % [str(meta.get("name", "")), tr("DAY"), int(meta.get("day", 1))]
+	b_continue.pressed.connect(func(): SceneRouter.load_game(last))
+	v.add_child(b_continue)
+	var b_new := UITheme.button(tr("MENU_NEW"), 300)
 	b_new.pressed.connect(func(): SceneRouter.start_new_game())
-	center.add_child(b_new)
-
-	var b_load := UITheme.button(tr("MENU_LOAD"))
+	v.add_child(b_new)
+	var b_load := UITheme.button(tr("MENU_LOAD"), 300)
 	b_load.pressed.connect(func(): SceneRouter.go_to(SceneRouter.LOAD_SCREEN, 0.4))
-	center.add_child(b_load)
-
-	var b_settings := UITheme.button(tr("MENU_SETTINGS"))
+	v.add_child(b_load)
+	var b_settings := UITheme.button(tr("MENU_SETTINGS"), 300)
 	b_settings.pressed.connect(func(): SceneRouter.open_settings(SceneRouter.MAIN_MENU))
-	center.add_child(b_settings)
-
-	var b_quit := UITheme.button(tr("MENU_QUIT"))
+	v.add_child(b_settings)
+	var b_quit := UITheme.button(tr("MENU_QUIT"), 300)
 	b_quit.pressed.connect(func(): get_tree().quit())
-	center.add_child(b_quit)
+	v.add_child(b_quit)
 
-	var ver := UITheme.label("прототип · Godot 4.7", 14, UITheme.MUTED)
-	ver.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	ver.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	ver.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	ver.position -= Vector2(16, 12)
+	# печать-декор в углу
+	var seal := TextureRect.new()
+	seal.texture = UITheme.TEX_SEAL
+	seal.custom_minimum_size = Vector2(110, 110)
+	seal.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	seal.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	seal.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	seal.offset_left = -150
+	seal.offset_top = -150
+	seal.offset_right = -40
+	seal.offset_bottom = -40
+	seal.modulate.a = 0.85
+	add_child(seal)
+	var ver := UITheme.label("прототип · Godot 4.7", 13, Color(1, 1, 1, 0.5))
+	ver.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	ver.offset_left = 16
+	ver.offset_top = -30
 	add_child(ver)
 
-	UITheme.fade_in(center, 1.2)
+	UITheme.fade_in(col, 1.0)
 	if not b_continue.disabled:
 		b_continue.grab_focus()
 	else:

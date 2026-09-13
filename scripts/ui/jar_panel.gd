@@ -11,6 +11,7 @@ var _slots_label: Label
 var _selected := -1
 var _release_btn: Button
 var _panel: PanelContainer
+var _jar_view: JarView
 
 func _ready() -> void:
 	layer = 20
@@ -19,21 +20,20 @@ func _ready() -> void:
 	root.theme = UITheme.make_theme()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(root)
-	var dim := ColorRect.new()
-	dim.color = Color(0.1, 0.1, 0.16, 0.35)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.add_child(dim)
+	root.add_child(UITheme.dim_layer())
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(center)
 	_panel = PanelContainer.new()
-	_panel.custom_minimum_size = Vector2(620, 420)
+	_panel.custom_minimum_size = Vector2(820, 520)
 	center.add_child(_panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	_panel.add_child(v)
-	v.add_child(UITheme.title(tr("JAR_TITLE"), 36))
+	var st := UITheme.sign_title(tr("JAR_TITLE"))
+	st.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	v.add_child(st)
 	_slots_label = UITheme.label("", 18, UITheme.MUTED)
 	_slots_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(_slots_label)
@@ -42,6 +42,10 @@ func _ready() -> void:
 	h.add_theme_constant_override("separation", 20)
 	h.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(h)
+	_jar_view = JarView.new()
+	_jar_view.big = true
+	_jar_view.custom_minimum_size = Vector2(230, 300)
+	h.add_child(_jar_view)
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(280, 220)
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -67,7 +71,7 @@ func _ready() -> void:
 	close.pressed.connect(close_panel)
 	btns.add_child(close)
 	_refresh()
-	UITheme.fade_in(_panel, 0.3)
+	UITheme.pop_in(_panel)
 	AudioManager.play_sfx("open", -8.0)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -117,6 +121,7 @@ func _refresh() -> void:
 
 func _select(i: int) -> void:
 	_selected = i
+	_jar_view.highlight = i
 	_refresh()
 
 func _release() -> void:
@@ -124,4 +129,5 @@ func _release() -> void:
 		return
 	GameState.release_from_jar(_selected)
 	_selected = -1
+	_jar_view.highlight = -1
 	_refresh()

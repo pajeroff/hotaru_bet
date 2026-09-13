@@ -1,48 +1,114 @@
 extends CanvasLayer
-## Индикаторы: время/фаза, погода, банка, "Сохранено", подсказка ловли.
+## HUD: слева сверху — блок «часы + дата + фаза/погода», по центру сверху — скорость времени,
+## справа сверху — живая банка и состояние храма; снизу — подсказки и тост «Сохранено».
 
-var _time_label: Label
-var _jar_label: Label
+var _clock: ClockWidget
+var _time_text: Label
+var _date_text: Label
+var _phase_text: Label
+var _jar_view: JarView
+var _jar_text: Label
 var _hint: Label
 var _saved: Label
 var _controls: Label
-var _jar_panel: Control
 var _fps: Label
-var _speed: Label
 var _speed_buttons: Array = []
 var _fireflies = null
+var _weekday_base := 0
 
 func _ready() -> void:
 	layer = 10
 	var hud_theme := UITheme.make_theme(true)
-	var top := PanelContainer.new()
-	top.theme = hud_theme
-	top.position = Vector2(16, 16)
-	top.custom_minimum_size = Vector2(230, 0)
-	var st := UITheme._panel_style(UITheme.PANEL_DARK)
-	st.content_margin_left = 16
-	st.content_margin_right = 16
-	st.content_margin_top = 10
-	st.content_margin_bottom = 10
-	top.add_theme_stylebox_override("panel", st)
-	add_child(top)
-	_time_label = UITheme.label("", 18, UITheme.TEXT_LIGHT)
-	top.add_child(_time_label)
+	var st := UITheme.hud_style()
 
-	_jar_panel = PanelContainer.new()
-	_jar_panel.theme = hud_theme
-	_jar_panel.add_theme_stylebox_override("panel", st)
-	_jar_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_jar_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_jar_panel.offset_right = -16
-	_jar_panel.offset_left = -16
-	_jar_panel.offset_top = 16
-	_jar_panel.offset_bottom = 16
-	add_child(_jar_panel)
-	_jar_label = UITheme.label("", 18, UITheme.TEXT_LIGHT)
-	_jar_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_jar_panel.add_child(_jar_label)
+	# ---------- левый блок: часы ----------
+	var left := PanelContainer.new()
+	left.theme = hud_theme
+	left.add_theme_stylebox_override("panel", st)
+	left.position = Vector2(14, 14)
+	add_child(left)
+	var lh := HBoxContainer.new()
+	lh.add_theme_constant_override("separation", 12)
+	left.add_child(lh)
+	_clock = ClockWidget.new()
+	_clock.custom_minimum_size = Vector2(112, 112)
+	lh.add_child(_clock)
+	var lv := VBoxContainer.new()
+	lv.alignment = BoxContainer.ALIGNMENT_CENTER
+	lv.add_theme_constant_override("separation", 2)
+	lh.add_child(lv)
+	_time_text = UITheme.label("", 30, UITheme.TEXT_LIGHT)
+	_time_text.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
+	_time_text.add_theme_constant_override("shadow_offset_y", 2)
+	lv.add_child(_time_text)
+	_date_text = UITheme.label("", 15, UITheme.GLOW)
+	lv.add_child(_date_text)
+	_phase_text = UITheme.label("", 15, Color(0.9, 0.86, 0.78))
+	lv.add_child(_phase_text)
 
+	# ---------- центр сверху: скорость времени ----------
+	var sp := PanelContainer.new()
+	sp.theme = hud_theme
+	sp.add_theme_stylebox_override("panel", st)
+	sp.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	sp.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	sp.offset_top = 14
+	sp.offset_bottom = 14
+	add_child(sp)
+	var sh := HBoxContainer.new()
+	sh.add_theme_constant_override("separation", 6)
+	sp.add_child(sh)
+	var sl := UITheme.label(tr("TIME_SPEED_SHORT"), 15, UITheme.GLOW)
+	sl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	sh.add_child(sl)
+	var speeds: Array[String] = ["normal", "fast", "faster"]
+	var labels: Array[String] = ["×1", "×1.5", "×2"]
+	for i in range(3):
+		var b := Button.new()
+		b.text = labels[i]
+		b.toggle_mode = true
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(58, 32)
+		b.add_theme_font_size_override("font_size", 16)
+		b.add_theme_stylebox_override("normal", _speed_style(false))
+		b.add_theme_stylebox_override("hover", _speed_style(false, true))
+		b.add_theme_stylebox_override("pressed", _speed_style(true))
+		b.add_theme_color_override("font_color", Color(0.92, 0.86, 0.74))
+		b.add_theme_color_override("font_pressed_color", UITheme.INK)
+		b.add_theme_color_override("font_hover_color", Color(1, 0.95, 0.85))
+		b.pressed.connect(_on_speed_pressed.bind(speeds[i]))
+		sh.add_child(b)
+		_speed_buttons.append(b)
+
+	# ---------- правый блок: банка ----------
+	var right := PanelContainer.new()
+	right.theme = hud_theme
+	right.add_theme_stylebox_override("panel", st)
+	right.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	right.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	right.offset_right = -14
+	right.offset_left = -14
+	right.offset_top = 14
+	right.offset_bottom = 14
+	add_child(right)
+	var rh := HBoxContainer.new()
+	rh.add_theme_constant_override("separation", 10)
+	right.add_child(rh)
+	var rv := VBoxContainer.new()
+	rv.alignment = BoxContainer.ALIGNMENT_CENTER
+	rv.add_theme_constant_override("separation", 2)
+	rh.add_child(rv)
+	_jar_text = UITheme.label("", 15, UITheme.TEXT_LIGHT)
+	_jar_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	rv.add_child(_jar_text)
+	var jar_hint := UITheme.label("[%s] %s" % [Settings.get_action_key_name("open_jar"), tr("JAR_LOOK")], 12, Color(1, 1, 1, 0.5))
+	jar_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	rv.add_child(jar_hint)
+	_jar_view = JarView.new()
+	_jar_view.custom_minimum_size = Vector2(72, 104)
+	rh.add_child(_jar_view)
+
+	# ---------- низ ----------
 	_hint = UITheme.label(tr("HINT_CATCH"), 20, UITheme.TEXT_LIGHT)
 	_hint.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_hint.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -64,11 +130,11 @@ func _ready() -> void:
 	_controls.add_theme_constant_override("shadow_outline_size", 4)
 	add_child(_controls)
 
-	_saved = UITheme.label("• " + tr("SAVED"), 18, UITheme.ACCENT_SOFT)
+	_saved = UITheme.label("✿ " + tr("SAVED"), 18, UITheme.GLOW)
 	_saved.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	_saved.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_saved.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_saved.position -= Vector2(20, 100)
+	_saved.position -= Vector2(20, 60)
 	_saved.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
 	_saved.add_theme_constant_override("shadow_outline_size", 6)
 	_saved.modulate.a = 0.0
@@ -76,63 +142,44 @@ func _ready() -> void:
 
 	_fps = UITheme.label("", 14, Color(0.8, 1.0, 0.8, 0.9))
 	_fps.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_fps.position = Vector2(16, 84)
+	_fps.position = Vector2(16, 150)
 	_fps.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
 	_fps.add_theme_constant_override("shadow_outline_size", 4)
 	add_child(_fps)
-	# панель скорости времени (справа снизу): ×1 · ×1.5 · ×2
-	var sp := PanelContainer.new()
-	sp.theme = hud_theme
-	sp.add_theme_stylebox_override("panel", st)
-	sp.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	sp.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	sp.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	sp.offset_left = -16
-	sp.offset_right = -16
-	sp.offset_top = -56
-	sp.offset_bottom = -56
-	add_child(sp)
-	var sh := HBoxContainer.new()
-	sh.add_theme_constant_override("separation", 6)
-	sp.add_child(sh)
-	_speed = UITheme.label("⏱", 16, UITheme.TEXT_LIGHT)
-	sh.add_child(_speed)
-	var speeds: Array[String] = ["normal", "fast", "faster"]
-	var labels: Array[String] = ["×1", "×1.5", "×2"]
-	for i in range(3):
-		var b := Button.new()
-		b.text = labels[i]
-		b.toggle_mode = true
-		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(56, 0)
-		b.add_theme_font_size_override("font_size", 16)
-		var sb := UITheme._btn_style(UITheme.BUTTON)
-		sb.content_margin_left = 8
-		sb.content_margin_right = 8
-		sb.content_margin_top = 4
-		sb.content_margin_bottom = 4
-		b.add_theme_stylebox_override("normal", sb)
-		var sbp := UITheme._btn_style(UITheme.ACCENT, true)
-		sbp.content_margin_left = 8
-		sbp.content_margin_right = 8
-		sbp.content_margin_top = 4
-		sbp.content_margin_bottom = 4
-		b.add_theme_stylebox_override("pressed", sbp)
-		b.add_theme_stylebox_override("hover", sb)
-		b.pressed.connect(_on_speed_pressed.bind(speeds[i]))
-		sh.add_child(b)
-		_speed_buttons.append(b)
+
 	Settings.settings_changed.connect(_refresh_speed)
 	_refresh_speed()
 	GameState.jar_changed.connect(_refresh_jar)
-	SaveManager.game_saved.connect(func(_s): show_saved())
+	GameState.temple_changed.connect(func(_l: int): _refresh_jar())
+	SaveManager.game_saved.connect(func(_s: String): show_saved())
 	_refresh_jar()
+
+func _speed_style(pressed: bool, hover := false) -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = UITheme.GOLD if pressed else (Color(0.45, 0.33, 0.24, 0.9) if hover else Color(0.35, 0.25, 0.18, 0.8))
+	s.border_color = Color(0.75, 0.58, 0.38, 0.9)
+	s.set_border_width_all(1)
+	s.set_corner_radius_all(8)
+	s.content_margin_left = 8
+	s.content_margin_right = 8
+	s.content_margin_top = 3
+	s.content_margin_bottom = 3
+	return s
 
 func set_firefly_manager(fm) -> void:
 	_fireflies = fm
 
 func _process(delta: float) -> void:
-	_time_label.text = "%s · %s\n%s %d · %s" % [GameState.get_time_string(), tr("PHASE_" + GameState.get_phase()), tr("DAY"), GameState.day, tr("W_" + GameState.weather)]
+	var t: float = GameState.time_of_day
+	var h := int(t)
+	var m := int((t - h) * 60.0)
+	var h12 := h % 12
+	if h12 == 0:
+		h12 = 12
+	_time_text.text = "%d:%02d %s" % [h12, m, tr("AM") if h < 12 else tr("PM")]
+	var wd := (GameState.day - 1) % 7
+	_date_text.text = "%s %d · %s · %s" % [tr("DAY"), GameState.day, tr("WEEKDAY_%d" % wd), tr("MONTH_" + GameState.season)]
+	_phase_text.text = "%s · %s" % [tr("PHASE_" + GameState.get_phase()), tr("W_" + GameState.weather)]
 	_fps.visible = Settings.show_fps
 	if Settings.show_fps:
 		_fps.text = "%d FPS · %.1f ms" % [Engine.get_frames_per_second(), Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0]
@@ -159,9 +206,9 @@ func _refresh_jar() -> void:
 	for i in range(GameState.JAR_SLOTS):
 		dots += "●" if i < used else "○"
 	if used > GameState.JAR_SLOTS:
-		dots += "+%d" % (used - GameState.JAR_SLOTS)
-	_jar_label.text = "%s  %s\n%s: %s" % [tr("JAR_TITLE"), dots, tr("TEMPLE"), tr("TEMPLE_%d" % GameState.temple_level)]
-	_jar_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.8) if GameState.jar_is_over() else UITheme.TEXT_LIGHT)
+		dots += " +%d" % (used - GameState.JAR_SLOTS)
+	_jar_text.text = "%s  %s\n%s: %s" % [tr("JAR_TITLE"), dots, tr("TEMPLE"), tr("TEMPLE_%d" % GameState.temple_level)]
+	_jar_text.add_theme_color_override("font_color", Color(1.0, 0.85, 0.8) if GameState.jar_is_over() else UITheme.TEXT_LIGHT)
 
 func show_saved() -> void:
 	AudioManager.play_sfx("save", -8.0)

@@ -65,6 +65,8 @@ func _ready() -> void:
 	hud.set_firefly_manager(fireflies)
 
 	GameState.running = true
+	if SaveManager.seconds_since_save() == INF:
+		SaveManager.mark_session_start()
 	# предварительно заселяем поляну
 	for i in range(FireflyData.target_count(GameState.get_phase(), GameState.weather)):
 		fireflies.spawn_one()

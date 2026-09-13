@@ -28,6 +28,7 @@ var _visible_scale := 0.0
 var _hide_alpha := 1.0
 var _dim := 1.0
 var _bob := 0.0
+var _light_mul := 1.0
 
 func setup(d: Dictionary, player) -> void:
 	data = d
@@ -39,33 +40,41 @@ func setup(d: Dictionary, player) -> void:
 
 func _ready() -> void:
 	z_index = 5
+	# Аддитивный материал: свечение не гаснет под CanvasModulate ночью и хорошо читается днём.
+	var add_mat := CanvasItemMaterial.new()
+	add_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	_halo = Sprite2D.new()
 	_halo.texture = TEX_GLOW
-	_halo.scale = Vector2.ONE * glow_size * 0.9
-	_halo.modulate = Color(color.r, color.g, color.b, 0.25)
+	_halo.material = add_mat
+	_halo.scale = Vector2.ONE * glow_size * 1.1
+	_halo.modulate = Color(color.r, color.g, color.b, 0.35)
 	add_child(_halo)
+	# тёмное тельце — делает светлячка заметным на светлом дневном фоне
+	var body := Sprite2D.new()
+	body.texture = TEX_GLOW
+	body.scale = Vector2.ONE * glow_size * 0.16
+	body.modulate = Color(0.25, 0.18, 0.12, 0.85)
+	add_child(body)
 	_core = Sprite2D.new()
 	_core.texture = TEX_GLOW
-	_core.scale = Vector2.ONE * glow_size * 0.28
-	_core.modulate = Color(color.r * 0.7 + 0.3, color.g * 0.7 + 0.3, color.b * 0.7 + 0.3, 1)
-	var outline := Sprite2D.new()
-	outline.texture = TEX_GLOW
-	outline.scale = Vector2.ONE * glow_size * 0.36
-	outline.modulate = Color(color.r * 0.35, color.g * 0.3, color.b * 0.35, 0.55)
-	outline.show_behind_parent = true
-	_core.add_child(outline)
+	_core.material = add_mat
+	_core.scale = Vector2.ONE * glow_size * 0.36
+	_core.modulate = Color(color.r * 0.6 + 0.4, color.g * 0.6 + 0.4, color.b * 0.6 + 0.4, 1)
 	add_child(_core)
 	var q := clampi(Settings.particle_quality, 0, 2)
 	_light = PointLight2D.new()
 	_light.texture = TEX_LIGHT
 	_light.color = color
-	_light.texture_scale = 0.45 * glow_size
+	_light.texture_scale = 0.5 * glow_size
 	_light.energy = 0.0
-	_light.enabled = q >= 2 or rarity != "common"
+	_light.shadow_enabled = false
+	_light.enabled = true
+	_light_mul = 0.7 if q == 0 else 1.0
 	add_child(_light)
 	_trail = GPUParticles2D.new()
 	_trail.amount = (6 if rarity == "common" else 12) if q < 2 else (16 if rarity == "common" else 28)
-	_trail.visible = q >= 1
+	_trail.visible = true
+	_trail.material = add_mat
 	_trail.lifetime = 0.9
 	_trail.texture = TEX_GLOW
 	_trail.local_coords = false
@@ -96,11 +105,11 @@ func _process(delta: float) -> void:
 	var pulse := 0.6 + 0.4 * sin(_t * (2.2 if rarity == "common" else 1.5) + _seed)
 	var night_boost := 1.25 if GameState.get_phase() == "night" else 1.0
 	var a := _visible_scale * _hide_alpha * _dim
-	_light.energy = pulse * a * night_boost * (0.35 if rarity == "common" else 0.55)
-	_halo.modulate.a = 0.18 * a * pulse + 0.08 * a
-	_halo.scale = Vector2.ONE * glow_size * (0.8 + 0.3 * pulse)
-	_core.modulate.a = a
-	_core.scale = Vector2.ONE * glow_size * (0.24 + 0.06 * pulse)
+	_light.energy = pulse * a * night_boost * _light_mul * (0.5 if rarity == "common" else 0.75)
+	_halo.modulate.a = 0.30 * a * pulse + 0.12 * a
+	_halo.scale = Vector2.ONE * glow_size * (0.9 + 0.35 * pulse)
+	_core.modulate.a = a * (0.75 + 0.25 * pulse)
+	_core.scale = Vector2.ONE * glow_size * (0.32 + 0.08 * pulse)
 	_trail.emitting = a > 0.2 and _state != "caught"
 	if rarity == "legendary":
 		_halo.rotation += delta * 0.5
