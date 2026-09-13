@@ -49,8 +49,8 @@ func _ready() -> void:
 
 	_sprite = AnimatedSprite2D.new()
 	_sprite.sprite_frames = _build_frames()
-	_sprite.offset = Vector2(0, -FH * 0.5 + 16)
-	_sprite.scale = Vector2(0.35, 0.35)
+	_sprite.offset = Vector2(0, -FH * 0.5 + 24)
+	_sprite.scale = Vector2(0.4, 0.4)
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_sprite.animation = "idle_down"
 	_sprite.play()
@@ -193,7 +193,7 @@ func _physics_process(delta: float) -> void:
 	var bob := absf(sin(_bob_phase)) * 2.2 * spd
 	var stretch := 1.0 + sin(_bob_phase * 2.0) * 0.025 * spd
 	_sprite.position.y = lerpf(_sprite.position.y, -bob, delta * 20.0)
-	_sprite.scale = Vector2(0.35 / stretch, 0.35 * stretch)
+	_sprite.scale = Vector2(0.4 / stretch, 0.4 * stretch)
 	# лёгкий наклон корпуса по направлению движения, по диагонали чуть сильнее (иллюзия 8 направлений)
 	var diag := 0.0
 	if _walking and (_row == 1 or _row == 2):

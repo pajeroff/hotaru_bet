@@ -64,7 +64,7 @@ func _process(delta: float) -> void:
 func _inner_rect() -> Rect2:
 	# область стекла внутри банки (по пропорциям текстуры)
 	var r := _jar_rect()
-	return Rect2(r.position + Vector2(r.size.x * 0.12, r.size.y * 0.24), Vector2(r.size.x * 0.76, r.size.y * 0.68))
+	return Rect2(r.position + Vector2(r.size.x * 0.15, r.size.y * 0.30), Vector2(r.size.x * 0.70, r.size.y * 0.62))
 
 func _jar_rect() -> Rect2:
 	var ts := TEX_JAR.get_size()

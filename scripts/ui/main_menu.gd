@@ -17,8 +17,8 @@ func _ready() -> void:
 	grad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var gt := GradientTexture2D.new()
 	var g := Gradient.new()
-	g.set_color(0, Color(0.05, 0.03, 0.08, 0.0))
-	g.set_color(1, Color(0.15, 0.08, 0.15, 0.30))
+	g.set_color(0, Color(0.02, 0.05, 0.07, 0.0))
+	g.set_color(1, Color(0.02, 0.05, 0.07, 0.45))
 	gt.gradient = g
 	gt.fill_from = Vector2(0, 0.3)
 	gt.fill_to = Vector2(0, 1)
@@ -41,11 +41,11 @@ func _ready() -> void:
 
 	var t := UITheme.title("Хотару", 84, UITheme.TEXT_LIGHT)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	t.add_theme_color_override("font_shadow_color", Color(0.2, 0.1, 0.05, 0.7))
+	t.add_theme_color_override("font_shadow_color", Color(0.4, 0.9, 0.95, 0.45))
 	t.add_theme_constant_override("shadow_offset_y", 4)
 	t.add_theme_constant_override("shadow_outline_size", 10)
 	col.add_child(t)
-	var sub := UITheme.label("остров у древнего храма", 20, Color(1, 0.95, 0.85, 0.85))
+	var sub := UITheme.label("свет пора нести домой", 20, Color(0.75, 0.9, 0.92, 0.85))
 	sub.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
 	sub.add_theme_constant_override("shadow_outline_size", 4)
 	col.add_child(sub)
@@ -84,7 +84,7 @@ func _ready() -> void:
 	# печать-декор в углу
 	var seal := TextureRect.new()
 	seal.texture = UITheme.TEX_SEAL
-	seal.custom_minimum_size = Vector2(110, 110)
+	seal.custom_minimum_size = Vector2(60, 120)
 	seal.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	seal.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	seal.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)

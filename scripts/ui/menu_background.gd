@@ -24,7 +24,7 @@ void fragment() {
 	float n2 = fbm(vec2(uv.x * 5.0 - t * 0.015, uv.y * 9.0));
 	float band = smoothstep(0.45, 0.72, uv.y) * (1.0 - smoothstep(0.75, 1.0, uv.y));
 	float a = band * (n * 0.55 + n2 * 0.25) * 0.55;
-	vec3 col = mix(vec3(0.95, 0.85, 0.92), vec3(1.0, 0.93, 0.85), n2);
+	vec3 col = mix(vec3(0.45, 0.70, 0.75), vec3(0.55, 0.80, 0.82), n2);
 	COLOR = vec4(col, a);
 }
 """
@@ -113,20 +113,20 @@ func _draw() -> void:
 		draw_texture_rect(_bg, Rect2((sz - dsz) * 0.5 + drift, dsz), false)
 	else:
 		var pts := PackedVector2Array([Vector2.ZERO, Vector2(sz.x, 0), sz, Vector2(0, sz.y)])
-		var cols := PackedColorArray([Color(0.62, 0.55, 0.78), Color(0.75, 0.62, 0.72), Color(0.30, 0.40, 0.36), Color(0.25, 0.36, 0.34)])
+		var cols := PackedColorArray([Color(0.08, 0.18, 0.22), Color(0.10, 0.22, 0.26), Color(0.05, 0.12, 0.14), Color(0.04, 0.10, 0.12)])
 		draw_polygon(pts, cols)
 	# мягкое «дыхание» солнечного света слева
 	var sun := Vector2(sz.x * 0.05, sz.y * 0.55)
 	var breathe := 0.5 + 0.5 * sin(_t * 0.5)
 	for i in range(5):
-		draw_circle(sun, sz.y * (0.18 + i * 0.12), Color(1.0, 0.85, 0.65, (0.05 - i * 0.008) * (0.7 + 0.3 * breathe)))
+		draw_circle(sun, sz.y * (0.18 + i * 0.12), Color(0.5, 0.9, 0.95, (0.04 - i * 0.006) * (0.7 + 0.3 * breathe)))
 	# блики на воде (нижняя треть)
 	for i in range(22):
 		var k := float(i) / 22.0
 		var x := fmod(k * sz.x * 1.3 + sin(_t * 0.2 + i) * 20.0, sz.x)
 		var y := sz.y * (0.78 + 0.18 * fmod(k * 7.31, 1.0))
 		var a := 0.12 * (0.5 + 0.5 * sin(_t * 1.3 + i * 1.7))
-		draw_rect(Rect2(x, y, 26.0 + 20.0 * fmod(k * 3.7, 1.0), 2.0), Color(1.0, 0.95, 0.85, a))
+		draw_rect(Rect2(x, y, 26.0 + 20.0 * fmod(k * 3.7, 1.0), 2.0), Color(0.7, 0.95, 0.95, a))
 	# лепестки
 	for pt in _petals:
 		var p: Vector2 = pt["pos"] * sz
@@ -135,7 +135,7 @@ func _draw() -> void:
 		var d := Vector2(cos(r), sin(r))
 		var n := Vector2(-d.y, d.x) * 0.55
 		var poly := PackedVector2Array([p + d * s, p + n * s, p - d * s, p - n * s])
-		draw_colored_polygon(poly, Color(1.0, 0.78, 0.85, 0.75))
+		draw_colored_polygon(poly, Color(0.6, 0.95, 0.95, 0.5))
 	# светлячки (поверх тумана — рисуем позже через дочерний слой не нужно: туман полупрозрачен)
 	for f in _flies:
 		var p: Vector2 = f["pos"] * sz

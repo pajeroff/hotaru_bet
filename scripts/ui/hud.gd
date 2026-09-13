@@ -43,7 +43,7 @@ func _ready() -> void:
 	lv.add_child(_time_text)
 	_date_text = UITheme.label("", 15, UITheme.GLOW)
 	lv.add_child(_date_text)
-	_phase_text = UITheme.label("", 15, Color(0.9, 0.86, 0.78))
+	_phase_text = UITheme.label("", 15, UITheme.INK_SOFT)
 	lv.add_child(_phase_text)
 
 	# ---------- центр сверху: скорость времени ----------
@@ -73,7 +73,7 @@ func _ready() -> void:
 		b.add_theme_stylebox_override("normal", _speed_style(false))
 		b.add_theme_stylebox_override("hover", _speed_style(false, true))
 		b.add_theme_stylebox_override("pressed", _speed_style(true))
-		b.add_theme_color_override("font_color", Color(0.92, 0.86, 0.74))
+		b.add_theme_color_override("font_color", UITheme.INK_SOFT)
 		b.add_theme_color_override("font_pressed_color", UITheme.INK)
 		b.add_theme_color_override("font_hover_color", Color(1, 0.95, 0.85))
 		b.pressed.connect(_on_speed_pressed.bind(speeds[i]))
@@ -156,8 +156,8 @@ func _ready() -> void:
 
 func _speed_style(pressed: bool, hover := false) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
-	s.bg_color = UITheme.GOLD if pressed else (Color(0.45, 0.33, 0.24, 0.9) if hover else Color(0.35, 0.25, 0.18, 0.8))
-	s.border_color = Color(0.75, 0.58, 0.38, 0.9)
+	s.bg_color = Color(0.20, 0.42, 0.46) if pressed else (Color(0.12, 0.24, 0.28, 0.9) if hover else Color(0.06, 0.13, 0.16, 0.8))
+	s.border_color = UITheme.CYAN if pressed else UITheme.EDGE
 	s.set_border_width_all(1)
 	s.set_corner_radius_all(8)
 	s.content_margin_left = 8

@@ -26,8 +26,8 @@ func _ready() -> void:
 
 	_sprite = Sprite2D.new()
 	_sprite.texture = TEX
-	_sprite.scale = Vector2(0.2680, 0.2680)
-	_sprite.offset = Vector2(0, -TEX.get_height() * 0.5 + 92.5)
+	_sprite.scale = Vector2(0.24, 0.24)
+	_sprite.offset = Vector2(0, -TEX.get_height() * 0.5 + 200.0)
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_mat = ShaderMaterial.new()
 	_mat.shader = SH_GLOW
@@ -36,7 +36,7 @@ func _ready() -> void:
 
 	_light = PointLight2D.new()
 	_light.texture = TEX_LIGHT
-	_light.color = Color(1.0, 0.82, 0.55)
+	_light.color = Color(0.55, 0.95, 1.0)
 	_light.texture_scale = 3.0
 	_light.energy = 0.8
 	_light.position = Vector2(0, -60)

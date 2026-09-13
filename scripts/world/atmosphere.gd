@@ -108,7 +108,7 @@ func _apply_quality() -> void:
 	_post_rect.visible = q >= 1
 	_fog_rect.visible = q >= 1
 	var muls: Array[float] = [0.25, 0.55, 1.0]
-	var blooms: Array[float] = [0.15, 0.25, 0.32]
+	var blooms: Array[float] = [0.3, 0.5, 0.65]
 	var mul: float = muls[q]
 	_rain.amount_ratio = mul
 	_snow.amount_ratio = mul
@@ -121,16 +121,16 @@ func attach_modulate(m: CanvasModulate) -> void:
 
 func _light_for_time(t: float) -> Color:
 	var keys := [
-		[0.0, Color(0.30, 0.36, 0.66)],
-		[4.5, Color(0.32, 0.38, 0.68)],
-		[6.0, Color(0.88, 0.68, 0.64)],
-		[8.0, Color(0.96, 0.92, 0.84)],
-		[12.0, Color(0.95, 0.95, 0.92)],
-		[16.5, Color(0.96, 0.92, 0.82)],
-		[18.0, Color(0.92, 0.72, 0.50)],
-		[19.5, Color(0.78, 0.55, 0.62)],
-		[21.5, Color(0.40, 0.44, 0.72)],
-		[24.0, Color(0.30, 0.36, 0.66)],
+		[0.0, Color(0.34, 0.50, 0.58)],
+		[4.5, Color(0.36, 0.52, 0.60)],
+		[6.0, Color(0.55, 0.62, 0.66)],
+		[8.0, Color(0.70, 0.80, 0.80)],
+		[12.0, Color(0.76, 0.86, 0.84)],
+		[16.5, Color(0.70, 0.78, 0.78)],
+		[18.0, Color(0.60, 0.60, 0.68)],
+		[19.5, Color(0.46, 0.54, 0.66)],
+		[21.5, Color(0.36, 0.50, 0.60)],
+		[24.0, Color(0.34, 0.50, 0.58)],
 	]
 	for i in range(keys.size() - 1):
 		var k0: float = keys[i][0]
@@ -190,7 +190,7 @@ func _process(delta: float) -> void:
 	elif _fog_a > 0.01:
 		pass
 	# пост-обработка подстраивается под фазу
-	var tint := Color(1.0, 0.98, 0.94) if phase != "night" else Color(0.92, 0.95, 1.05)
+	var tint := Color(0.90, 1.0, 1.0) if phase != "night" else Color(0.85, 0.98, 1.05)
 	_post_mat.set_shader_parameter("tint", tint)
 	_post_mat.set_shader_parameter("vignette", 0.3 + 0.2 * _star_a + 0.15 * _dark_a)
 	_post_mat.set_shader_parameter("saturation", 1.1 - 0.35 * _silence_a - 0.15 * _fog_a)

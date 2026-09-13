@@ -11,31 +11,26 @@ const POND2_RADII := Vector2(150, 100)
 const TEX_GRASS := preload("res://assets/textures/grass.png")
 const TEX_PATH := preload("res://assets/textures/path.png")
 const TEX_SHADOW := preload("res://assets/textures/shadow_blob.png")
-const SPRITE_NAMES: Array[String] = ["tree_a", "tree_b", "tree_sakura", "bush", "bush_flower", "rock", "lantern", "grass_tuft", "bench", "well", "torii", "stupa", "mushrooms", "log", "flowers", "signpost", "reeds", "tree_old", "fox_statue", "stump"]
+const SPRITE_NAMES: Array[String] = ["mushroom_purple", "mushroom_teal", "crystal", "tree_a", "tree_b", "tree_sakura", "bush", "bush_flower", "rock", "lantern", "grass_tuft", "bench", "well", "torii", "stupa", "mushrooms", "log", "flowers", "signpost", "reeds", "tree_old", "fox_statue", "stump"]
 var SPR := {}
-const SWAY_KINDS: Array[String] = ["tree_a", "tree_b", "tree_sakura", "tree_old", "bush", "bush_flower", "grass_tuft", "flowers", "reeds", "mushrooms"]
+const SWAY_KINDS: Array[String] = ["tree_a", "tree_b", "tree_old", "grass_tuft", "reeds"]
+## Светящиеся объекты: цвет и сила света (2.5D-ощущение: объекты сами освещают землю вокруг).
+const GLOW_KINDS := {
+	"mushroom_purple": [Color(0.78, 0.6, 1.0), 1.1], "bush_flower": [Color(0.78, 0.6, 1.0), 1.1],
+	"mushroom_teal": [Color(0.5, 1.0, 0.9), 1.0], "bush": [Color(0.5, 1.0, 0.9), 0.9],
+	"mushrooms": [Color(0.5, 1.0, 0.9), 0.7],
+	"crystal": [Color(0.6, 0.95, 1.0), 1.2], "flowers": [Color(0.6, 0.95, 1.0), 0.8], "torii": [Color(0.6, 0.95, 1.0), 1.2], "fox_statue": [Color(0.6, 0.95, 1.0), 0.8],
+	"lantern": [Color(1.0, 0.8, 0.45), 1.3], "well": [Color(1.0, 0.8, 0.45), 1.3], "stupa": [Color(1.0, 0.8, 0.45), 1.0], "signpost": [Color(1.0, 0.8, 0.45), 0.8],
+	"log": [Color(0.5, 1.0, 0.9), 0.5], "stump": [Color(0.5, 1.0, 0.9), 0.5], "tree_old": [Color(0.5, 1.0, 0.95), 0.9],
+}
+const TEX_LIGHT_SOFT := preload("res://assets/textures/light_soft.png")
 ## Спрайты теперь в высоком разрешении; масштаб приводит их к прежнему размеру на сцене.
 const NATIVE_SCALE := {
-	"tree_a": 0.6718,
-	"tree_b": 0.6771,
-	"tree_sakura": 0.5991,
-	"bush_flower": 0.4188,
-	"bush": 0.4424,
-	"rock": 0.296,
-	"lantern": 0.2507,
-	"grass_tuft": 0.241,
-	"bench": 0.4085,
-	"well": 0.3951,
-	"torii": 0.5349,
-	"stupa": 0.347,
-	"mushrooms": 0.2527,
-	"log": 0.3799,
-	"flowers": 0.3031,
-	"signpost": 0.2712,
-	"reeds": 0.2932,
-	"tree_old": 0.963,
-	"fox_statue": 0.2477,
-	"stump": 0.2405,
+	"tree_a": 0.55, "tree_b": 0.60, "tree_sakura": 0.55, "tree_old": 0.60,
+	"bush": 0.32, "bush_flower": 0.38, "mushroom_purple": 0.38, "mushroom_teal": 0.32, "mushrooms": 0.30,
+	"rock": 0.36, "lantern": 0.30, "grass_tuft": 0.22, "log": 0.34, "crystal": 0.30,
+	"bench": 0.30, "well": 0.30, "torii": 0.34, "stupa": 0.30, "flowers": 0.22, "signpost": 0.24,
+	"reeds": 0.24, "fox_statue": 0.22, "stump": 0.24,
 }
 const TALL_KINDS: Array[String] = ["tree_a", "tree_b", "tree_sakura", "tree_old", "torii", "well"]
 const SH_WIND := preload("res://shaders/wind_sway.gdshader")
@@ -47,6 +42,8 @@ var wind := 0.0
 var _t := 0.0
 var _grass: Array = []   # Sprite2D пучков травы
 var _wind_mat_tree: ShaderMaterial
+var _glow_lights: Array = []
+var _glow_t := 0.0
 var _wind_mat_small: ShaderMaterial
 var _quality := 1
 var _visible_props: Array = []
@@ -184,8 +181,8 @@ func _add_prop(kind: String, pos: Vector2, scale_mul := 1.0, sway := true, shado
 		sh.texture = TEX_SHADOW
 		sh.position = pos + Vector2(6, 4)
 		var w := spr.texture.get_width() * scale_mul * ns
-		sh.scale = Vector2(w / 128.0 * 0.9, w / 128.0 * 0.35) * shadow
-		sh.modulate = Color(0, 0, 0, 0.35)
+		sh.scale = Vector2(w / 128.0 * 1.0, w / 128.0 * 0.40) * shadow
+		sh.modulate = Color(0.0, 0.03, 0.05, 0.5)
 		sh.z_index = 1
 		add_child(sh)
 	# окклюдер для теней от фонаря/храма
@@ -206,6 +203,19 @@ func _add_prop(kind: String, pos: Vector2, scale_mul := 1.0, sway := true, shado
 		spr.material = _wind_mat_tree if kind.begins_with("tree") else _wind_mat_small
 	if TALL_KINDS.has(kind):
 		_tall.append(spr)
+	# свет от светящихся объектов
+	if GLOW_KINDS.has(kind) and (_quality >= 1 or kind == "lantern" or kind == "crystal"):
+		var gi: Array = GLOW_KINDS[kind]
+		var gl := PointLight2D.new()
+		gl.texture = TEX_LIGHT_SOFT
+		gl.color = gi[0]
+		gl.energy = float(gi[1]) * 0.55
+		gl.texture_scale = 0.9 * scale_mul
+		gl.shadow_enabled = false
+		gl.position = pos + Vector2(0, -h * ns * scale_mul * 0.45)
+		gl.blend_mode = Light2D.BLEND_MODE_ADD
+		add_child(gl)
+		_glow_lights.append([gl, float(gi[1]) * 0.55, randf() * TAU])
 	props_root.add_child(spr)
 	return spr
 
@@ -361,6 +371,10 @@ func _build_collision() -> void:
 
 # ---------- обновление ----------
 func _process(delta: float) -> void:
+	_glow_t += delta
+	for g in _glow_lights:
+		var l: PointLight2D = g[0]
+		l.energy = float(g[1]) * (0.85 + 0.15 * sin(_glow_t * 1.3 + float(g[2])))
 	_t += delta
 	wind = sin(_t * 0.7) * 0.5 + sin(_t * 1.9) * 0.3
 	RenderingServer.global_shader_parameter_set("player_world_pos", player_pos)

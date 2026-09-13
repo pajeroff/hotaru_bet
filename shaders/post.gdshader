@@ -2,7 +2,7 @@ shader_type canvas_item;
 // Пост-обработка: аккуратный bloom только с ярких участков, тонировка, виньетка, зерно.
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
 uniform float bloom_strength : hint_range(0.0, 2.0) = 0.25;
-uniform float bloom_threshold : hint_range(0.0, 1.5) = 0.85;
+uniform float bloom_threshold : hint_range(0.0, 1.5) = 0.6;
 uniform float vignette : hint_range(0.0, 1.0) = 0.3;
 uniform float saturation : hint_range(0.0, 2.0) = 1.05;
 uniform float grain : hint_range(0.0, 0.1) = 0.012;
