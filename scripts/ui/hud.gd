@@ -60,9 +60,9 @@ func _ready() -> void:
 	var sh := HBoxContainer.new()
 	sh.add_theme_constant_override("separation", 6)
 	sp.add_child(sh)
-	var sl := UITheme.label(tr("TIME_SPEED_SHORT"), 15, UITheme.GLOW)
-	sl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sh.add_child(sl)
+	var speed_lbl := UITheme.label(tr("TIME_SPEED_SHORT"), 15, UITheme.GLOW)
+	speed_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	sh.add_child(speed_lbl)
 	var speeds: Array[String] = ["normal", "fast", "faster"]
 	var labels: Array[String] = ["×1", "×1.5", "×2"]
 	for i in range(3):
@@ -124,11 +124,12 @@ func _ready() -> void:
 	hh.add_theme_constant_override("separation", 8)
 	hot.add_child(hh)
 	for i in range(Inventory.HOTBAR_SIZE):
-		var sl := ItemSlot.new("hotbar", i, 56)
-		sl.hotkey = str(i + 1)
-		sl.pressed.connect(func(): Inventory.set_active(sl.index))
-		hh.add_child(sl)
-		_hot_slots.append(sl)
+		var slot := ItemSlot.new("hotbar", i, 56)
+		slot.hotkey = str(i + 1)
+		var idx := i
+		slot.pressed.connect(func(): Inventory.set_active(idx))
+		hh.add_child(slot)
+		_hot_slots.append(slot)
 	var sep := ColorRect.new()
 	sep.color = Color(UITheme.EDGE.r, UITheme.EDGE.g, UITheme.EDGE.b, 0.4)
 	sep.custom_minimum_size = Vector2(1, 40)
