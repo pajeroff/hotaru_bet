@@ -9,6 +9,7 @@ func _ready() -> void:
 	AudioManager.set_ambient("wind", 0.25)
 
 	var bg = preload("res://scripts/ui/menu_background.gd").new()
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	# лёгкое затемнение снизу для читаемости
 	var grad := TextureRect.new()

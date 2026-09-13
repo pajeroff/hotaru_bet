@@ -15,6 +15,7 @@ func _ready() -> void:
 	theme = UITheme.make_theme()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var bg = preload("res://scripts/ui/menu_background.gd").new()
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	add_child(UITheme.dim_layer())
 

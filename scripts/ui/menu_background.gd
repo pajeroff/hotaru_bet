@@ -31,8 +31,12 @@ void fragment() {
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	size = get_viewport_rect().size
+	get_viewport().size_changed.connect(func(): size = get_viewport_rect().size)
 	_bg = _load_bg()
+	if _bg == null:
+		push_warning("Фон меню не найден: assets/textures/menu_bg.jpg")
 	for i in range(34):
 		_flies.append({
 			"pos": Vector2(randf(), randf_range(0.35, 1.0)),
@@ -45,7 +49,7 @@ func _ready() -> void:
 		_petals.append(_new_petal(true))
 	# слой тумана поверх арта, под светлячками
 	_fog_rect = ColorRect.new()
-	_fog_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fog_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_fog_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sh := Shader.new()
 	sh.code = FOG_SHADER
@@ -99,6 +103,8 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var sz := size
+	if sz.x < 2.0 or sz.y < 2.0:
+		sz = get_viewport_rect().size
 	if _bg != null:
 		var ts := Vector2(_bg.get_size())
 		var sc := maxf(sz.x / ts.x, sz.y / ts.y) * 1.05
