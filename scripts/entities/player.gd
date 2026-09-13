@@ -61,8 +61,6 @@ func _ready() -> void:
 	_hand.scale = Vector2(0.28, 0.28)
 	_hand.z_index = 1
 	add_child(_hand)
-	Inventory.active_changed.connect(_on_item_changed)
-	_on_item_changed(Inventory.active_item())
 
 	_lantern = PointLight2D.new()
 	_lantern.texture = TEX_LIGHT
@@ -113,7 +111,8 @@ func _ready() -> void:
 	add_child(_flash)
 
 	global_position = GameState.player_position
-	set_lantern(GameState.lantern_on, true)
+	Inventory.active_changed.connect(_on_item_changed)
+	_on_item_changed(Inventory.active_item(), true)
 
 func _frame(col: int, row: int) -> AtlasTexture:
 	var at := AtlasTexture.new()
@@ -153,16 +152,18 @@ func _hand_anchor() -> Vector2:
 		3: return Vector2(10, -18)
 	return Vector2(14, -12)
 
-func _on_item_changed(item_id: String) -> void:
+func _on_item_changed(item_id: String, instant := false) -> void:
 	_hand.texture = Inventory.icon(item_id)
 	_hand.visible = item_id != "" and item_id != "jar"
 	# фонарь горит только когда он в руке
-	set_lantern(item_id == "lantern", false)
-	if item_id == "lantern":
+	set_lantern(item_id == "lantern", instant)
+	if item_id == "lantern" and not instant:
 		AudioManager.play_sfx("lantern", -8.0, 1.2)
 
 func set_lantern(on: bool, instant := false) -> void:
 	GameState.lantern_on = on
+	if _lantern == null or _lantern_glow == null:
+		return
 	var tw := create_tween().set_parallel(true)
 	var d := 0.01 if instant else 0.5
 	tw.tween_property(_lantern, "energy", 0.8 if on else 0.0, d).set_trans(Tween.TRANS_SINE)
